@@ -71,13 +71,8 @@ Page({
         const isSalesAssigned = userId && Array.isArray(assignedSalesIds) && assignedSalesIds.length > 0 &&
           assignedSalesIds.some(id => String(id) === String(userId));
         const isSales = user.role === 2 && isSameGroup && isSalesAssigned;
-<<<<<<< Updated upstream
-        
-        // 负责人：同组即可
-=======
 
-        // 主播：同组即可
->>>>>>> Stashed changes
+        // 负责人：同组即可
         const isAnchor = user.role === 1 && isSameGroup;
 
         const canAddFollowUp = isSales || isAnchor;
