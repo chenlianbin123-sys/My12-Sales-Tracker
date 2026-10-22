@@ -39,8 +39,28 @@ exports.main = async (event, context) => {
     if (customerName.trim().length > 100 || phone.length > 50 || (remarks !== undefined && typeof remarks !== 'string')) {
       return { success: false, message: '名称最多100字符，电话最多50字符，备注须为文本' };
     }
+    if (event.force !== undefined && typeof event.force !== 'boolean') {
+      return { success: false, message: '重复录入选项须为布尔值' };
+    }
+    const normalizedPhone = phone.trim();
 
-    // 4. 如果指定了成员ID，验证成员是否在本团队
+    // 4. 同组重复电话检测：同一条客户电话在同一小组只保留一条
+    if (event.force !== true) {
+      const duplicateRes = await db.collection('leads')
+        .where({ groupId, phone: normalizedPhone })
+        .limit(1)
+        .get();
+      if (duplicateRes.data.length > 0) {
+        return {
+          success: false,
+          duplicate: true,
+          message: '本组已存在相同客户电话',
+          data: { leadId: duplicateRes.data[0]._id }
+        };
+      }
+    }
+
+    // 5. 如果指定了成员ID，验证成员是否在本团队
     let finalAssignedSalesIds = [];
     if (assignedSalesIds && Array.isArray(assignedSalesIds) && assignedSalesIds.length > 0) {
       // 查询指定的成员是否都在本团队
@@ -103,7 +123,7 @@ exports.main = async (event, context) => {
     const now = new Date();
     const leadData = {
       groupId: groupId,
-      phone: phone.trim(),
+      phone: normalizedPhone,
       customerName: customerName.trim(),
       createdByAnchorId: userId,
       assignedSalesId: finalAssignedSalesIds[0] || null, // 主负责人（向后兼容）
@@ -114,6 +134,8 @@ exports.main = async (event, context) => {
       createdAt: now,
       updatedAt: now,
       followUpCount: 0
+      // 不写入 nextFollowUpAt：字段缺失不会被「待跟进」范围查询命中，
+      // 而显式 null 在数据库比较中会被当作最小值，导致新线索误判为逾期。
     };
 
     const addRes = await db.collection('leads').add({ data: leadData });

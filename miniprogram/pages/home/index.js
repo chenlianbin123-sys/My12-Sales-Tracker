@@ -7,7 +7,8 @@ Page({
     roleText: "",
     groupText: "",
     userName: "",
-    refreshing: false
+    refreshing: false,
+    todo: null // { dueToday, overdue } 待跟进待办
   },
   async onShow() {
     await this.refreshData();
@@ -32,6 +33,33 @@ Page({
       groupText: role === 0 ? "" : `（团队 ${groupId}）`,
       userName: user.name || ""
     });
+    await this.loadTodo();
+  },
+
+  /** 今日待跟进 / 已逾期，直接来自云函数统计，不受分页影响 */
+  async loadTodo() {
+    try {
+      const res = await wx.cloud.callFunction({ name: "userStats", data: {} });
+      if (res?.result?.success) {
+        const data = res.result.data || {};
+        this.setData({
+          todo: {
+            dueToday: data.dueToday || 0,
+            overdue: data.overdue || 0,
+            dueWeek: data.dueWeek || 0
+          }
+        });
+      }
+    } catch (error) {
+      console.error("加载待办失败:", error);
+    }
+  },
+
+  /** 跳到待跟进列表（带筛选参数，不写入本机偏好） */
+  goDue(e) {
+    const due = e.currentTarget.dataset.due;
+    const base = this.data.role === 1 ? "/pages/anchor/leads/index" : "/pages/sales/leads/index";
+    wx.navigateTo({ url: base + "?due=" + due });
   },
   
   async onRefresh() {
@@ -69,4 +97,3 @@ Page({
     wx.navigateTo({ url: "/pages/admin/users/index" });
   }
 });
-

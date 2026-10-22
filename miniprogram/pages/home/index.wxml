@@ -11,6 +11,28 @@
     <view class="muted" style="margin-top: 8rpx;">角色：{{roleText}} {{groupText}}</view>
   </view>
 
+  <!-- 待办：主播与销售可见 -->
+  <view class="card" wx:if="{{todo && role !== 0}}">
+    <view class="row-between">
+      <text class="card-title">待跟进提醒</text>
+      <text class="muted small">点击查看清单</text>
+    </view>
+    <view class="todo-grid">
+      <view class="todo-item warn" data-due="today" bindtap="goDue">
+        <view class="todo-num">{{todo.dueToday}}</view>
+        <view class="todo-label">今日待跟进</view>
+      </view>
+      <view class="todo-item alert" data-due="overdue" bindtap="goDue">
+        <view class="todo-num">{{todo.overdue}}</view>
+        <view class="todo-label">已逾期</view>
+      </view>
+      <view class="todo-item" data-due="week" bindtap="goDue">
+        <view class="todo-num">{{todo.dueWeek}}</view>
+        <view class="todo-label">未来7天</view>
+      </view>
+    </view>
+  </view>
+
   <view class="card" wx:if="{{role === 1}}">
     <view class="role-actions">
       <button class="btn-action btn-success" bindtap="goAnchorLeads">
@@ -58,4 +80,3 @@
 </view>
 
 <view class="watermark">my12yyds</view>
-

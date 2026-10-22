@@ -34,7 +34,7 @@ exports.main = async (event = {}, context) => {
     // 3. 参数校验
     const inputError = validateInput(event);
     if (inputError) return { success: false, message: inputError };
-    const { leadId, followUpDate, status, remarks, advanceToNext } = event;
+    const { leadId, followUpDate, status, remarks, advanceToNext, nextFollowUpDate } = event;
     if (!leadId) {
       return { success: false, message: '线索ID不能为空' };
     }
@@ -73,7 +73,8 @@ exports.main = async (event = {}, context) => {
     if (lastFollowUpRes.data.length > 0) {
       const lastDate = new Date(lastFollowUpRes.data[0].followUpDate);
       const currentDate = new Date(followUpDate);
-      durationFromLast = Math.floor((currentDate - lastDate) / (1000 * 60 * 60 * 24));
+      // Backdated records must not produce a negative interval.
+      durationFromLast = Math.max(0, Math.floor((currentDate - lastDate) / (1000 * 60 * 60 * 24)));
     }
 
     // 8. 如果选择推进到下一个进程，自动设置下一个状态
@@ -94,6 +95,7 @@ exports.main = async (event = {}, context) => {
 
     // 9. 创建跟进记录
     const now = new Date();
+    const isTerminal = finalStatus === 'WON' || finalStatus === 'LOST';
     const followUpData = {
       leadId,
       groupId: lead.groupId,
@@ -102,35 +104,50 @@ exports.main = async (event = {}, context) => {
       followUpDate: new Date(followUpDate),
       status: finalStatus,
       remarks: remarks || '',
+      nextFollowUpDate: nextFollowUpDate || '', // 计划的下次跟进日（YYYY-MM-DD）
       durationFromLast,
       createdAt: now
     };
 
     const addRes = await db.collection('followUps').add({ data: followUpData });
 
-    // 10. 更新线索的时间统计字段
+    // 10. 更新线索摘要：只跟随「最新一次跟进」，补录历史记录不回退摘要
+    const previousLast = lead.lastFollowUpAt ? new Date(lead.lastFollowUpAt) : null;
+    const isLatest = !previousLast || !Number.isFinite(previousLast.getTime()) ||
+      new Date(followUpDate).getTime() >= previousLast.getTime();
+
     const updateData = {
-      lastFollowUpAt: new Date(followUpDate),
-      lastStatus: finalStatus,
       followUpCount: (lead.followUpCount || 0) + 1,
       updatedAt: now
     };
 
-    // 如果是首次跟进
-    if (!lead.firstFollowUpAt) {
-      updateData.firstFollowUpAt = new Date(followUpDate);
-    }
+    if (isLatest) {
+      updateData.lastFollowUpAt = new Date(followUpDate);
+      updateData.lastStatus = finalStatus;
 
-    // 如果状态是已完成
-    if (finalStatus === 'WON') {
-      updateData.wonAt = new Date(followUpDate);
-      updateData.status = 'WON';
-    }
+      // 如果是首次跟进
+      if (!lead.firstFollowUpAt) {
+        updateData.firstFollowUpAt = new Date(followUpDate);
+      }
 
-    // 如果状态是已关闭
-    if (finalStatus === 'LOST') {
-      updateData.lostAt = new Date(followUpDate);
-      updateData.status = 'LOST';
+      // 下次跟进提醒：成交/流失后不再提醒，其余情况以本次跟进填写为准
+      if (nextFollowUpDate && !isTerminal) {
+        updateData.nextFollowUpAt = new Date(nextFollowUpDate + 'T00:00:00+08:00');
+      } else {
+        updateData.nextFollowUpAt = db.command.remove();
+      }
+
+      // 如果状态是成交
+      if (finalStatus === 'WON') {
+        updateData.wonAt = new Date(followUpDate);
+        updateData.status = 'WON';
+      }
+
+      // 如果状态是流失
+      if (finalStatus === 'LOST') {
+        updateData.lostAt = new Date(followUpDate);
+        updateData.status = 'LOST';
+      }
     }
 
     await db.collection('leads').doc(leadId).update({ data: updateData });

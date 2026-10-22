@@ -24,6 +24,17 @@
       <textarea class="textarea" placeholder="请输入跟进内容" value="{{remarks}}" bindinput="onRemarksInput" />
     </view>
 
+    <view class="form-item">
+      <text class="label">下次跟进日期（可选）</text>
+      <view class="row-between">
+        <picker class="flex-1" mode="date" value="{{nextFollowUpDate}}" start="{{followUpDate}}" bindchange="onNextDateChange">
+          <view class="picker">{{nextFollowUpDate || '不设置提醒'}}</view>
+        </picker>
+        <button wx:if="{{nextFollowUpDate}}" size="mini" bindtap="onClearNextDate">清除</button>
+      </view>
+      <text class="hint">设置后线索会出现在「今日待跟进 / 已逾期」提醒中；成交或流失后自动清除。</text>
+    </view>
+
     <view class="form-item" wx:if="{{lead}}">
       <label class="checkbox-label">
         <checkbox checked="{{advanceToNext}}" bindchange="onAdvanceChange" />

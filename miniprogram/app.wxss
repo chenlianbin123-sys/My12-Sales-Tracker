@@ -127,6 +127,82 @@ button {
 
 .tag-NEW { background: #e6f7ff; color: #1677ff; border-color: rgba(22,119,255,0.25); }
 .tag-CONTACTED { background: #fff7e6; color: #fa8c16; border-color: rgba(250,140,22,0.25); }
+
+/* ========== 待跟进提醒 ========== */
+.tag-group {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8rpx;
+  justify-content: flex-end;
+}
+
+.tag-due {
+  font-size: 22rpx;
+  padding: 6rpx 12rpx;
+  border-radius: 999rpx;
+  border: 1rpx solid transparent;
+  white-space: nowrap;
+}
+
+.tag-due-overdue { background: #fff1f0; color: #cf1322; border-color: rgba(207,19,34,0.25); }
+.tag-due-today { background: #fff7e6; color: #d46b08; border-color: rgba(212,107,8,0.25); }
+.tag-due-soon { background: #e6f7ff; color: #0958d9; border-color: rgba(9,88,217,0.2); }
+.tag-due-future { background: #f3f4f6; color: #6b7280; border-color: #e5e7eb; }
+
+.todo-grid {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 16rpx;
+}
+
+.todo-item {
+  flex: 1;
+  background: #f9fafb;
+  border-radius: 12rpx;
+  padding: 20rpx 12rpx;
+  text-align: center;
+}
+
+.todo-item.alert { background: #fff1f0; }
+.todo-item.warn { background: #fff7e6; }
+
+.todo-num {
+  font-size: 40rpx;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.todo-label {
+  font-size: 22rpx;
+  color: #6b7280;
+  margin-top: 4rpx;
+}
+
+/* ========== 协作销售 ========== */
+.chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-top: 12rpx;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 8rpx 16rpx;
+  border-radius: 999rpx;
+  background: #eef4ff;
+  color: #1d4ed8;
+  font-size: 24rpx;
+}
+
+.chip-remove {
+  color: #ef4444;
+  font-weight: 700;
+  padding: 0 4rpx;
+}
 .tag-QUOTED { background: #f6ffed; color: #52c41a; border-color: rgba(82,196,26,0.25); }
 .tag-WON { background: #f6ffed; color: #07c160; border-color: rgba(7,193,96,0.25); }
 .tag-LOST { background: #fff1f0; color: #ef4444; border-color: rgba(239,68,68,0.25); }

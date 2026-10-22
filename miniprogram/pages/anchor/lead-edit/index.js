@@ -1,10 +1,15 @@
 const { login } = require('../../../utils/auth');
+const { summarizeBatch, MAX_BATCH } = require('../../../utils/phone-input');
 
 Page({
   data: {
+    mode: 'single', // single | batch
     phone: '',
     customerName: '',
     remarks: '',
+    batchText: '',
+    batchPreview: { validCount: 0, invalidCount: 0, repeatedCount: 0, overLimit: false, preview: [] },
+    maxBatch: MAX_BATCH,
     groupSales: [],
     submitting: false
   },
@@ -40,6 +45,12 @@ Page({
     }
   },
 
+  onModeChange(e) {
+    const mode = e.currentTarget.dataset.mode;
+    if (mode === this.data.mode) return;
+    this.setData({ mode });
+  },
+
   onPhoneInput(e) {
     this.setData({ phone: e.detail.value });
   },
@@ -47,6 +58,11 @@ Page({
 
   onRemarksInput(e) {
     this.setData({ remarks: e.detail.value });
+  },
+
+  onBatchInput(e) {
+    const batchText = e.detail.value;
+    this.setData({ batchText, batchPreview: summarizeBatch(batchText) });
   },
 
   onSalesToggle(e) {
@@ -60,9 +76,14 @@ Page({
     this.setData({ groupSales });
   },
 
+  selectedSalesIds() {
+    return this.data.groupSales.filter(s => s.checked).map(s => s._id);
+  },
+
   async onSubmit() {
-    const { phone, customerName, remarks, groupSales, submitting } = this.data;
-    
+    if (this.data.mode === 'batch') return this.onSubmitBatch();
+    const { phone, customerName, remarks, submitting } = this.data;
+
     if (!phone.trim() && !customerName.trim()) {
       wx.showToast({ title: '请填写名称或电话', icon: 'none' });
       return;
@@ -72,37 +93,30 @@ Page({
     this.setData({ submitting: true });
 
     try {
-      const selectedSalesIds = groupSales.filter(s => s.checked).map(s => s._id);
-      
-      const res = await wx.cloud.callFunction({
-        name: 'leadCreate',
-        data: {
-          phone: phone.trim(),
-          customerName: customerName.trim(),
-          remarks: remarks.trim(),
-          assignedSalesIds: selectedSalesIds.length > 0 ? selectedSalesIds : undefined
-        }
+      const result = await this.createLead({
+        phone: phone.trim(),
+        customerName: customerName.trim(),
+        remarks: remarks.trim()
       });
 
-      if (res.result.success) {
-        wx.showToast({ title: '录入成功', icon: 'success' });
-        // 延迟返回，确保提示显示
-        setTimeout(() => {
-          wx.navigateBack();
-          // 通知上一页刷新（通过事件或页面栈）
-          const pages = getCurrentPages();
-          if (pages.length > 1) {
-            const prevPage = pages[pages.length - 2];
-            if (prevPage && typeof prevPage.loadLeads === 'function') {
-              // 延迟执行，确保页面已显示
-              setTimeout(() => {
-                prevPage.loadLeads();
-              }, 300);
-            }
+      // 组内重复：提示后可选择强行录入
+      if (result && result.duplicate) {
+        this.setData({ submitting: false });
+        wx.showModal({
+          title: '该号码已存在',
+          content: '本组已有相同客户电话，是否仍然录入一条新线索？',
+          confirmText: '仍然录入',
+          success: res => {
+            if (res.confirm) this.forceCreate();
           }
-        }, 1500);
+        });
+        return;
+      }
+
+      if (result && result.success) {
+        this.afterCreated('录入成功');
       } else {
-        wx.showToast({ title: res.result.message || '录入失败', icon: 'none' });
+        wx.showToast({ title: (result && result.message) || '录入失败', icon: 'none' });
         this.setData({ submitting: false });
       }
     } catch (error) {
@@ -110,5 +124,119 @@ Page({
       wx.showToast({ title: '录入失败', icon: 'none' });
       this.setData({ submitting: false });
     }
+  },
+
+  async forceCreate() {
+    if (this.data.submitting) return;
+    this.setData({ submitting: true });
+    try {
+      const result = await this.createLead({
+        phone: this.data.phone.trim(),
+        remarks: this.data.remarks.trim(),
+        force: true
+      });
+      if (result && result.success) this.afterCreated('录入成功');
+      else {
+        wx.showToast({ title: (result && result.message) || '录入失败', icon: 'none' });
+        this.setData({ submitting: false });
+      }
+    } catch (error) {
+      console.error('强制录入失败:', error);
+      wx.showToast({ title: '录入失败', icon: 'none' });
+      this.setData({ submitting: false });
+    }
+  },
+
+  async createLead(extra) {
+    const selectedSalesIds = this.selectedSalesIds();
+    const res = await wx.cloud.callFunction({
+      name: 'leadCreate',
+      data: {
+        ...extra,
+        assignedSalesIds: selectedSalesIds.length > 0 ? selectedSalesIds : undefined
+      }
+    });
+    return res.result || {};
+  },
+
+  async onSubmitBatch() {
+    const { batchText, remarks, submitting, batchPreview } = this.data;
+    if (submitting) return;
+    if (!batchText.trim()) {
+      wx.showToast({ title: '请粘贴电话号码', icon: 'none' });
+      return;
+    }
+    if (batchPreview.overLimit) {
+      wx.showToast({ title: '单次最多 ' + MAX_BATCH + ' 条', icon: 'none' });
+      return;
+    }
+
+    this.setData({ submitting: true });
+    try {
+      const selectedSalesIds = this.selectedSalesIds();
+      const res = await wx.cloud.callFunction({
+        name: 'leadCreateBatch',
+        data: {
+          phones: batchText,
+          remarks: remarks.trim(),
+          assignedSalesIds: selectedSalesIds.length > 0 ? selectedSalesIds : undefined
+        }
+      });
+      const result = res.result || {};
+      if (!result.success) {
+        wx.showModal({
+          title: '批量录入失败',
+          content: (result.message || '请检查输入') +
+            (result.data && result.data.invalid && result.data.invalid.length
+              ? '\n无效号码：' + result.data.invalid.slice(0, 5).join('、') : ''),
+          showCancel: false
+        });
+        this.setData({ submitting: false });
+        return;
+      }
+
+      const data = result.data;
+      const lines = [
+        '成功录入：' + data.createdCount + ' 条',
+        '跳过重复：' + data.duplicateCount + ' 条',
+        '无效号码：' + data.invalidCount + ' 条'
+      ];
+      if (data.failedCount) lines.push('写入失败：' + data.failedCount + ' 条');
+      if (data.duplicateCount > 0 && data.duplicates.length) {
+        lines.push('重复号码示例：' + data.duplicates.slice(0, 3).join('、'));
+      }
+
+      this.setData({ submitting: false });
+      wx.showModal({
+        title: '批量录入结果',
+        content: lines.join('\n'),
+        showCancel: false,
+        success: () => {
+          this.setData({ batchText: '', batchPreview: summarizeBatch('') });
+          if (data.createdCount > 0) this.afterCreated(null, true);
+        }
+      });
+    } catch (error) {
+      console.error('批量录入失败:', error);
+      wx.showToast({ title: '批量录入失败', icon: 'none' });
+      this.setData({ submitting: false });
+    }
+  },
+
+  /** 创建成功后的收尾：提示并回退刷新列表 */
+  afterCreated(title, stay) {
+    if (title) wx.showToast({ title, icon: 'success' });
+    this.setData({ submitting: false });
+    if (stay) return;
+    setTimeout(() => {
+      wx.navigateBack();
+      const pages = getCurrentPages();
+      if (pages.length > 1) {
+        const prevPage = pages[pages.length - 2];
+        if (prevPage && typeof prevPage.loadLeads === 'function') {
+          setTimeout(() => { prevPage.loadLeads(); }, 300);
+        }
+      }
+    }, 1200);
   }
 });
