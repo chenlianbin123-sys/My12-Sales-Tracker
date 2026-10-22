@@ -32,13 +32,13 @@
     <button size="mini" bindtap="onExport" disabled="{{!leads.length || loading || error}}">导出已加载 CSV</button>
   </view>
   <view wx:if="{{error}}" class="card error-box"><text>{{error}}</text><button size="mini" bindtap="onRefresh">重试</button></view>
-  <view class="card" wx:for="{{leads}}" wx:key="_id">
+  <view class="card lead-card" wx:for="{{leads}}" wx:key="_id">
     <view bindtap="onLeadTap" data-id="{{item._id}}">
-      <view class="row-between">
-        <text class="phone">{{item.customerName || item.phone || '未命名事项'}}</text>
+      <view class="row-between lead-card-header">
+        <text class="phone lead-card-name">{{item.customerName || item.phone || '未命名事项'}}</text>
         <view class="tag-group">
           <text wx:if="{{item.dueText}}" class="tag-due tag-due-{{item.dueLevel}}">{{item.dueText}}</text>
-          <text class="tag-status">{{item.lastStatusText}}</text>
+          <text class="tag-status tag-{{item.lastStatus || item.status}}">{{item.lastStatusText}}</text>
         </view>
       </view>
       <view class="muted small" wx:if="{{item.customerName && item.phone}}">{{item.phone}}</view>
@@ -51,7 +51,7 @@
       <button wx:if="{{item.phone}}" size="mini" bindtap="onCall" data-phone="{{item.phone}}">拨号</button>
       <button wx:if="{{item.phone}}" size="mini" bindtap="onCopy" data-phone="{{item.phone}}">复制电话</button>
       <button class="btn-success" size="mini" bindtap="onFollowUpTap" data-id="{{item._id}}">跟进</button>
-      <button wx:if="{{isAnchor}}" size="mini" bindtap="onDeleteLead" data-id="{{item._id}}">删除</button>
+      <button wx:if="{{isAnchor}}" class="lead-delete" size="mini" bindtap="onDeleteLead" data-id="{{item._id}}">删除</button>
     </view>
   </view>
   <view class="empty" wx:if="{{!leads.length && !loading && !error}}">没有符合筛选条件的线索</view>
