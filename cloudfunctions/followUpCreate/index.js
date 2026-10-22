@@ -1,4 +1,5 @@
 const cloud = require('wx-server-sdk');
+const { validateInput } = require('./validation');
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -10,7 +11,7 @@ const db = cloud.database();
  * 创建跟进记录（销售/主播）
  * 多销售协作：销售需在 assignedSalesIds 中；主播可对自己创建且同组的线索添加
  */
-exports.main = async (event, context) => {
+exports.main = async (event = {}, context) => {
   const wxContext = cloud.getWXContext();
   const openid = wxContext.OPENID;
 
@@ -31,6 +32,8 @@ exports.main = async (event, context) => {
     }
 
     // 3. 参数校验
+    const inputError = validateInput(event);
+    if (inputError) return { success: false, message: inputError };
     const { leadId, followUpDate, status, remarks, advanceToNext } = event;
     if (!leadId) {
       return { success: false, message: '线索ID不能为空' };
@@ -50,8 +53,8 @@ exports.main = async (event, context) => {
     }
 
     // 5. 权限校验
-    const assignedSalesIds = lead.assignedSalesIds || [];
-    const isSameGroup = lead.groupId === groupId;
+    const assignedSalesIds = Array.isArray(lead.assignedSalesIds) ? lead.assignedSalesIds : [];
+    const isSameGroup = [1, 2, 3, 4].includes(groupId) && lead.groupId === groupId;
     const isAssignedSales = isSales && isSameGroup && assignedSalesIds.includes(userId);
     const isGroupAnchor = isAnchor && isSameGroup;
 
