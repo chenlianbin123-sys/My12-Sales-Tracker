@@ -1,5 +1,9 @@
 ## 微信小程序：主播-销售分组式线索跟进系统（云开发）
 
+**当前源码版本：v0.1.0（预发布）** · [完整版本下载](https://github.com/my12yyds/My12-Sales-Tracker/releases) · [更新日志](CHANGELOG.md) · [版本安装说明](docs/RELEASES.md)
+
+完整源码包包含页面、云函数和测试，不含真实部署配置；尚未完成微信云端及真机验收。
+
 [![Regression checks](https://github.com/my12yyds/My12-Sales-Tracker/actions/workflows/checks.yml/badge.svg)](https://github.com/my12yyds/My12-Sales-Tracker/actions/workflows/checks.yml)
 [![CodeQL](https://github.com/my12yyds/My12-Sales-Tracker/actions/workflows/codeql.yml/badge.svg)](https://github.com/my12yyds/My12-Sales-Tracker/actions/workflows/codeql.yml)
 
