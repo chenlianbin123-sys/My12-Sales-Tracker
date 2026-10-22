@@ -5,6 +5,8 @@ Page({
   data: {
     summary: null,
     groupStats: [],
+    salesRanking: [],
+    partial: false,
     loading: false,
     userName: ''
   },
@@ -130,6 +132,8 @@ Page({
         this.setData({
           summary: res.result.data.summary,
           groupStats: groupStats,
+          salesRanking: res.result.data.salesRanking || [],
+          partial: res.result.data.partial === true,
           loading: false
         });
         return Promise.resolve();

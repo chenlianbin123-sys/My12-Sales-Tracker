@@ -2,6 +2,12 @@ const SORTS = {
   newest: ['createdAt', 'desc'], oldest: ['createdAt', 'asc'],
   recent: ['lastFollowUpAt', 'desc'], mostFollowed: ['followUpCount', 'desc']
 };
+
+// Closed deals no longer need a follow-up reminder.
+const TERMINAL_STATUSES = ['WON', 'LOST'];
+const DUE_OPTIONS = ['', 'today', 'overdue', 'week'];
+const DAY_MS = 86400000;
+
 function day(value) {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) throw new Error('日期须为 YYYY-MM-DD');
   const date = new Date(value);
@@ -9,7 +15,47 @@ function day(value) {
   // UI dates represent calendar days in China, independent of server timezone.
   return new Date(value + 'T00:00:00+08:00');
 }
-function buildFilters(db, scope, event) {
+
+/**
+ * China calendar day for "now", independent of the server timezone.
+ * Cloud functions may run in UTC, so local getDate() must not be used here.
+ */
+function chinaToday(now) {
+  const timestamp = now === undefined ? Date.now() : now;
+  const shifted = new Date(timestamp + 8 * 3600000);
+  if (!Number.isFinite(shifted.getTime())) throw new Error('当前时间无效');
+  return shifted.toISOString().slice(0, 10);
+}
+
+/**
+ * Build the "pending follow-up" conditions.
+ * today   : planned date is today
+ * overdue : planned date is before today
+ * week    : planned date is within the next 7 days (today included)
+ */
+function dueConditions(db, due, today) {
+  if (due === undefined || due === '') return [];
+  if (typeof due !== 'string' || !DUE_OPTIONS.includes(due)) throw new Error('待跟进筛选无效');
+  const start = day(today);
+  const conditions = [];
+  if (due === 'today') {
+    conditions.push({ nextFollowUpAt: db.command.gte(start) });
+    conditions.push({ nextFollowUpAt: db.command.lt(new Date(start.getTime() + DAY_MS)) });
+  } else if (due === 'week') {
+    conditions.push({ nextFollowUpAt: db.command.gte(start) });
+    conditions.push({ nextFollowUpAt: db.command.lt(new Date(start.getTime() + 7 * DAY_MS)) });
+  } else {
+    conditions.push({ nextFollowUpAt: db.command.lt(start) });
+  }
+  // Historic leads may carry status but no lastStatus.
+  conditions.push(db.command.or([
+    { lastStatus: db.command.nin(TERMINAL_STATUSES) },
+    { lastStatus: db.command.exists(false), status: db.command.nin(TERMINAL_STATUSES) }
+  ]));
+  return conditions;
+}
+
+function buildFilters(db, scope, event, options = {}) {
   const conditions = [scope];
   const sortKey = event.sort === undefined ? 'newest' : event.sort;
   if (typeof sortKey !== 'string' || !Object.prototype.hasOwnProperty.call(SORTS, sortKey)) throw new Error('排序选项无效');
@@ -33,6 +79,9 @@ function buildFilters(db, scope, event) {
   if (event.createdFrom && event.createdTo && event.createdFrom > event.createdTo) throw new Error('开始日期不能晚于结束日期');
   if (event.unfollowed !== undefined && typeof event.unfollowed !== 'boolean') throw new Error('未跟进选项须为布尔值');
   if (event.unfollowed) conditions.push(db.command.or([{ followUpCount: 0 }, { followUpCount: db.command.exists(false) }]));
+  const today = options.today === undefined ? chinaToday() : options.today;
+  const due = dueConditions(db, event.due, today);
+  due.forEach(condition => conditions.push(condition));
   return { query: conditions.length === 1 ? scope : db.command.and(conditions), order: SORTS[sortKey] };
 }
-module.exports = { buildFilters, SORTS, day };
+module.exports = { buildFilters, SORTS, day, dueConditions, chinaToday, TERMINAL_STATUSES, DUE_OPTIONS };

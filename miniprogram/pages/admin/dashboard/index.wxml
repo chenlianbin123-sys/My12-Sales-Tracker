@@ -39,8 +39,52 @@
         <text class="label">总线索数</text>
       </view>
       <view class="summary-item">
-        <text class="value">{{summary.totalFollowUpRate}}%</text>
+        <text class="value">{{summary.followUpRate}}%</text>
         <text class="label">已跟进率</text>
+      </view>
+      <view class="summary-item">
+        <text class="value value-won">{{summary.conversionRate}}%</text>
+        <text class="label">成交转化率</text>
+      </view>
+    </view>
+    <view class="summary-row" style="margin-top:16rpx;">
+      <view class="summary-item">
+        <text class="value value-sm value-won">{{summary.statusStats.WON}}</text>
+        <text class="label">成交</text>
+      </view>
+      <view class="summary-item">
+        <text class="value value-sm value-lost">{{summary.statusStats.LOST}}</text>
+        <text class="label">流失</text>
+      </view>
+      <view class="summary-item">
+        <text class="value value-sm value-warn">{{summary.dueToday}}</text>
+        <text class="label">今日待跟进</text>
+      </view>
+      <view class="summary-item">
+        <text class="value value-sm value-danger">{{summary.overdue}}</text>
+        <text class="label">已逾期</text>
+      </view>
+    </view>
+    <view class="muted small" style="margin-top:16rpx;">
+      共 {{summary.totalFollowUps}} 条跟进记录 · 平均每条线索跟进 {{summary.avgFollowUpCount}} 次
+    </view>
+    <view class="muted small partial-note" wx:if="{{partial}}">
+      数据量已超过单次统计上限（2 万），以上指标为近似值。
+    </view>
+  </view>
+
+  <view class="card" wx:if="{{salesRanking.length > 0}}">
+    <text class="section-title">销售业绩排行（按成交数）</text>
+    <view class="rank-row" wx:for="{{salesRanking}}" wx:key="_id">
+      <view class="rank-index rank-index-{{index < 3 ? index : 'rest'}}">{{index + 1}}</view>
+      <view class="rank-main">
+        <view class="row-between">
+          <text class="rank-name">{{item.name}}</text>
+          <text class="rank-group">第{{item.groupId}}组 · 转化 {{item.conversionRate}}%</text>
+        </view>
+        <view class="rank-meta">
+          分配 {{item.assignedCount}} · 已跟进 {{item.followedCount}} · 跟进 {{item.followUpCount}} 次 · 成交 {{item.wonCount}} · 逾期 {{item.overdueCount}}
+        </view>
       </view>
     </view>
   </view>
@@ -62,8 +106,12 @@
           <text class="stat-label">已跟进率</text>
         </view>
         <view class="stat-item">
-          <text class="stat-value">{{item.followedLeads}}</text>
-          <text class="stat-label">已跟进</text>
+          <text class="stat-value">{{item.conversionRate}}%</text>
+          <text class="stat-label">成交转化</text>
+        </view>
+        <view class="stat-item">
+          <text class="stat-value stat-warn">{{item.overdue}}</text>
+          <text class="stat-label">逾期未跟进</text>
         </view>
       </view>
       <view class="status-distribution">
@@ -96,6 +144,7 @@
             </view>
             <view class="lead-meta">
               <text class="meta-text">最近：{{leadItem.lastFollowUpDate || '—'}}</text>
+              <text class="meta-text" style="margin-left: 12rpx;" wx:if="{{leadItem.nextFollowUpDate}}">下次：{{leadItem.nextFollowUpDate}}</text>
             </view>
           </view>
           <button class="btn-danger-mini" size="mini" data-id="{{leadItem._id}}" bindtap="onDeleteLead">删除</button>
