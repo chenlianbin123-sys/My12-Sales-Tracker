@@ -1,11 +1,13 @@
 const { login } = require('../../utils/auth');
 const { getStatusOptions, getStatusText } = require('../../utils/status');
+const { chinaDay } = require('../../utils/due');
 
 Page({
   data: {
     leadId: '',
     lead: null,
     followUpDate: '',
+    nextFollowUpDate: '',
     statusIndex: 0,
     statusOptions: getStatusOptions(),
     remarks: '',
@@ -48,7 +50,9 @@ Page({
             lead: {
               ...lead,
               lastStatusText: getStatusText(lead.lastStatus)
-            }
+            },
+            // 已有计划时带出来，方便顺延
+            nextFollowUpDate: this.data.nextFollowUpDate || chinaDay(lead.nextFollowUpAt)
           });
         }
       }
@@ -63,6 +67,14 @@ Page({
 
   onStatusChange(e) {
     this.setData({ statusIndex: e.detail.value });
+  },
+
+  onNextDateChange(e) {
+    this.setData({ nextFollowUpDate: e.detail.value });
+  },
+
+  onClearNextDate() {
+    this.setData({ nextFollowUpDate: '' });
   },
 
   onRemarksInput(e) {
@@ -92,10 +104,15 @@ Page({
   },
 
   async onSubmit() {
-    const { leadId, followUpDate, statusOptions, statusIndex, remarks, submitting, advanceToNext } = this.data;
+    const { leadId, followUpDate, nextFollowUpDate, statusOptions, statusIndex, remarks, submitting, advanceToNext } = this.data;
     
     if (!followUpDate) {
       wx.showToast({ title: '请选择跟进日期', icon: 'none' });
+      return;
+    }
+
+    if (nextFollowUpDate && nextFollowUpDate < followUpDate) {
+      wx.showToast({ title: '下次跟进不能早于本次跟进', icon: 'none' });
       return;
     }
 
@@ -119,6 +136,7 @@ Page({
           followUpDate,
           status: statusOptions[statusIndex].value,
           remarks: remarks.trim(),
+          nextFollowUpDate: nextFollowUpDate || '',
           advanceToNext: advanceToNext || false
         }
       });

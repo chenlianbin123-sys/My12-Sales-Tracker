@@ -229,3 +229,78 @@
 .meta-text {
   color: #6b7280;
 }
+
+/* ===== 总体统计扩展 ===== */
+.summary-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.value-sm {
+  font-size: 36rpx;
+}
+
+.value-won { color: #07c160; }
+.value-lost { color: #ef4444; }
+.value-warn { color: #d46b08; }
+.value-danger { color: #cf1322; }
+.stat-warn { color: #cf1322; }
+
+.partial-note {
+  color: #d46b08;
+  margin-top: 8rpx;
+}
+
+/* ===== 销售业绩排行 ===== */
+.rank-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.rank-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.rank-index {
+  width: 44rpx;
+  height: 44rpx;
+  line-height: 44rpx;
+  border-radius: 50%;
+  text-align: center;
+  font-size: 24rpx;
+  font-weight: 800;
+  background: #f3f4f6;
+  color: #6b7280;
+  flex: none;
+}
+
+.rank-index-0 { background: #fff2e8; color: #d4380d; }
+.rank-index-1 { background: #fff7e6; color: #d46b08; }
+.rank-index-2 { background: #f6ffed; color: #389e0d; }
+
+.rank-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.rank-name {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #111827;
+}
+
+.rank-group {
+  font-size: 22rpx;
+  color: #6b7280;
+}
+
+.rank-meta {
+  font-size: 22rpx;
+  color: #6b7280;
+  margin-top: 6rpx;
+}

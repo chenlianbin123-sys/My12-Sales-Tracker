@@ -1,0 +1,9 @@
+{
+  "name": "groupMembers",
+  "version": "1.0.0",
+  "description": "列出本组销售（用于协作销售分配）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

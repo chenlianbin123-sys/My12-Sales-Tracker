@@ -91,3 +91,32 @@
   margin-top: 12rpx;
   line-height: 1.6;
 }
+
+.phone {
+  font-size: 40rpx;
+  font-weight: 800;
+  color: #111827;
+  margin-bottom: 20rpx;
+}
+
+.text-danger {
+  color: #cf1322;
+  font-weight: 600;
+}
+
+.assign-box {
+  margin-top: 24rpx;
+  background: #f9fafb;
+}
+
+.assign-box .section-title {
+  margin-bottom: 0;
+  font-size: 28rpx;
+}
+
+.hint-text {
+  display: block;
+  font-size: 22rpx;
+  color: #6b7280;
+  margin-top: 12rpx;
+}

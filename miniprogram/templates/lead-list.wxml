@@ -12,6 +12,7 @@
     <input class="search-input" value="{{keyword}}" maxlength="80" placeholder="输入关键词，点击搜索" bindinput="onKeywordInput" bindconfirm="onSearch" confirm-type="search" />
     <view class="filter-row">
       <picker mode="selector" range="{{statusOptions}}" range-key="label" value="{{statusIndex}}" bindchange="onStatusChange"><view class="picker">状态：{{statusOptions[statusIndex].label}}</view></picker>
+      <picker mode="selector" range="{{dueOptions}}" range-key="label" value="{{dueIndex}}" bindchange="onDueChange"><view class="picker">{{dueOptions[dueIndex].label}}</view></picker>
       <picker mode="selector" range="{{sortOptions}}" range-key="label" value="{{sortIndex}}" bindchange="onSortChange"><view class="picker">排序：{{sortOptions[sortIndex].label}}</view></picker>
     </view>
     <view class="filter-row">
@@ -33,10 +34,17 @@
   <view wx:if="{{error}}" class="card error-box"><text>{{error}}</text><button size="mini" bindtap="onRefresh">重试</button></view>
   <view class="card" wx:for="{{leads}}" wx:key="_id">
     <view bindtap="onLeadTap" data-id="{{item._id}}">
-      <view class="row-between"><text class="phone">{{item.customerName || item.phone || '未命名事项'}}</text><text class="tag-status">{{item.lastStatusText}}</text></view>
+      <view class="row-between">
+        <text class="phone">{{item.customerName || item.phone || '未命名事项'}}</text>
+        <view class="tag-group">
+          <text wx:if="{{item.dueText}}" class="tag-due tag-due-{{item.dueLevel}}">{{item.dueText}}</text>
+          <text class="tag-status">{{item.lastStatusText}}</text>
+        </view>
+      </view>
       <view class="muted small" wx:if="{{item.customerName && item.phone}}">{{item.phone}}</view>
       <view class="muted small">成员：{{item.assignedSalesNames || '未分配'}} · 跟进 {{item.followUpCount || 0}} 次</view>
       <view class="muted small">创建 {{item.createdAtDate || '—'}} · 最近跟进 {{item.lastFollowUpAt || '未跟进'}}</view>
+      <view class="muted small" wx:if="{{item.nextFollowUpDate}}">下次跟进 {{item.nextFollowUpDate}}</view>
       <view class="lead-remark" wx:if="{{item.remarks}}">{{item.remarks}}</view>
     </view>
     <view class="filter-row actions">

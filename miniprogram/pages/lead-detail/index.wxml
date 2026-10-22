@@ -3,13 +3,16 @@
   <view class="card" wx:if="{{lead.customerName}}"><text class="title">{{lead.customerName}}</text></view>
   <view class="card" wx:if="{{lead}}">
     <view>
-      <view class="info-row">
-        <text class="label">客户电话：</text>
-        <text class="value">{{lead.phone}}</text>
+      <view class="row-between">
+        <text class="phone">{{lead.phone}}</text>
+        <view class="tag-group">
+          <text wx:if="{{dueText}}" class="tag-due tag-due-{{dueLevel}}">{{dueText}}</text>
+          <text class="tag-status tag-{{lead.lastStatus}}">{{lead.lastStatusText}}</text>
+        </view>
       </view>
       <view class="info-row">
         <text class="label">当前状态：</text>
-        <text class="tag-status tag-{{lead.lastStatus}}">{{lead.lastStatusText}}</text>
+        <text class="value">{{lead.lastStatusText}}</text>
       </view>
       <view class="info-row">
         <text class="label">创建者：</text>
@@ -24,6 +27,14 @@
         <text class="value">{{lead.createdAtDate || '—'}}</text>
       </view>
       <view class="info-row">
+        <text class="label">最近跟进：</text>
+        <text class="value">{{lead.lastFollowUpAt ? lead.lastFollowUpAt : '未跟进'}}</text>
+      </view>
+      <view class="info-row">
+        <text class="label">下次跟进：</text>
+        <text class="value {{dueLevel === 'overdue' ? 'text-danger' : ''}}">{{lead.nextFollowUpDate || '未设置'}}</text>
+      </view>
+      <view class="info-row">
         <text class="label">跟进次数：</text>
         <text class="value">{{lead.followUpCount || 0}}</text>
       </view>
@@ -34,8 +45,25 @@
     </view>
 
     <view class="actions">
+      <button wx:if="{{lead.phone}}" bindtap="onCall">拨号</button>
       <button class="btn-success" wx:if="{{canAddFollowUp}}" bindtap="onAddFollowUp">跟进</button>
       <button class="btn-danger" wx:if="{{canDelete}}" bindtap="onDeleteLead">删除线索</button>
+    </view>
+
+    <!-- 协作销售管理：主播可增减本组销售 -->
+    <view class="card card-tight assign-box" wx:if="{{canManageAssignment}}">
+      <view class="row-between">
+        <text class="section-title">协作销售</text>
+        <button size="mini" class="btn-primary" bindtap="onAddAssign" disabled="{{assigning}}">添加销售</button>
+      </view>
+      <view class="chip-list" wx:if="{{assignedSales.length}}">
+        <view class="chip" wx:for="{{assignedSales}}" wx:key="_id">
+          <text>{{item.name}}</text>
+          <text class="chip-remove" data-id="{{item._id}}" data-name="{{item.name}}" bindtap="onRemoveAssign">✕</text>
+        </view>
+      </view>
+      <view class="muted small" wx:else>暂未分配销售</view>
+      <text class="hint-text">提示：移除销售不会删除其历史跟进记录；至少保留一名协作销售。</text>
     </view>
 
     <view class="card card-tight" style="margin-top:20rpx;">
@@ -49,6 +77,7 @@
           </view>
           <view class="muted small" style="margin-top:8rpx;">{{item.followUpDate}}</view>
           <view class="followup-remarks" wx:if="{{item.remarks}}">{{item.remarks}}</view>
+          <view class="muted small" wx:if="{{item.nextFollowUpDate}}">计划下次：{{item.nextFollowUpDate}}</view>
           <view class="muted small" wx:if="{{item.durationFromLast > 0}}">
             距离上次：{{item.durationFromLast}}天
           </view>

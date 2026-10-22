@@ -48,17 +48,20 @@ exports.main = async (event, context) => {
       return { success: false, message: '只能删除本团队线索' };
     }
 
-    // 6. 删除该线索的所有跟进记录
-    const followUpsRes = await db.collection('followUps')
-      .where({ leadId })
-      .get();
-    
-    if (followUpsRes.data.length > 0) {
-      // 使用 Promise.all 批量删除
-      const deletePromises = followUpsRes.data.map(followUp => 
+    // 6. 分批删除该线索的所有跟进记录
+    // 单次 get() 有返回条数上限，一次性查询会漏删，留下孤儿记录
+    let removed = 0;
+    for (let round = 0; round < 100; round++) {
+      const batch = await db.collection('followUps')
+        .where({ leadId })
+        .limit(100)
+        .get();
+      if (!batch.data || batch.data.length === 0) break;
+      await Promise.all(batch.data.map(followUp =>
         db.collection('followUps').doc(followUp._id).remove()
-      );
-      await Promise.all(deletePromises);
+      ));
+      removed += batch.data.length;
+      if (batch.data.length < 100) break;
     }
 
     // 7. 删除线索
@@ -66,7 +69,8 @@ exports.main = async (event, context) => {
 
     return {
       success: true,
-      message: '删除成功'
+      message: '删除成功',
+      data: { removedFollowUps: removed }
     };
   } catch (error) {
     console.error('删除线索失败:', error);

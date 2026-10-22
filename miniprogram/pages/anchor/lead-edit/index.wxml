@@ -1,18 +1,40 @@
 <!--负责人-录入线索页-->
 <view class="container">
   <view class="card">
-    <view class="form-item">
-      <text class="label">客户 / 事项名称</text>
-      <input class="input" maxlength="100" placeholder="例如客户姓名、服务事项或合作项目" value="{{customerName}}" bindinput="onCustomerNameInput" />
+    <view class="mode-switch">
+      <view class="mode-item {{mode === 'single' ? 'active' : ''}}" data-mode="single" bindtap="onModeChange">单条录入</view>
+      <view class="mode-item {{mode === 'batch' ? 'active' : ''}}" data-mode="batch" bindtap="onModeChange">批量录入</view>
     </view>
-    <view class="form-item">
-      <text class="label">联系电话（与名称至少填写一项）</text>
-      <input class="input" maxlength="50" placeholder="可选，支持国际区号" value="{{phone}}" bindinput="onPhoneInput" />
+
+    <block wx:if="{{mode === 'single'}}">
+      <view class="form-item">
+        <text class="label">客户 / 事项名称</text>
+        <input class="input" maxlength="100" placeholder="例如客户姓名、服务事项或合作项目" value="{{customerName}}" bindinput="onCustomerNameInput" />
+      </view>
+      <view class="form-item">
+        <text class="label">联系电话（与名称至少填写一项）</text>
+        <input class="input" maxlength="50" placeholder="可选，支持国际区号" value="{{phone}}" bindinput="onPhoneInput" />
+      </view>
+    </block>
+
+    <view class="form-item" wx:else>
+      <text class="label">电话号码 *（每行一个，也可用逗号分隔）</text>
+      <textarea class="textarea batch-textarea" placeholder="例如：&#10;13800000001&#10;138-0000-0002&#10;13800000003" value="{{batchText}}" bindinput="onBatchInput" maxlength="8000" />
+      <view class="batch-summary">
+        <text class="ok">可录入 {{batchPreview.validCount}} 条</text>
+        <text class="warn" wx:if="{{batchPreview.repeatedCount}}">本次重复 {{batchPreview.repeatedCount}} 条</text>
+        <text class="warn" wx:if="{{batchPreview.invalidCount}}">无法识别 {{batchPreview.invalidCount}} 条</text>
+      </view>
+      <text class="hint {{batchPreview.overLimit ? 'hint-error' : ''}}">单次最多 {{maxBatch}} 条；组内已存在的号码会自动跳过。</text>
+      <view class="batch-preview" wx:if="{{batchPreview.preview.length}}">
+        <text class="muted small">预览：{{batchPreview.preview}}</text>
+      </view>
     </view>
 
     <view class="form-item">
       <text class="label">备注</text>
       <textarea class="textarea" placeholder="请输入备注信息" value="{{remarks}}" bindinput="onRemarksInput" />
+      <text class="hint">批量录入时，本条备注会写入本次所有线索。</text>
     </view>
 
     <view class="form-item">
@@ -29,7 +51,7 @@
     </view>
 
     <button class="btn-success" bindtap="onSubmit" disabled="{{submitting}}">
-      {{submitting ? '提交中...' : '提交'}}
+      {{submitting ? '提交中...' : (mode === 'batch' ? '批量提交' : '提交')}}
     </button>
   </view>
 </view>

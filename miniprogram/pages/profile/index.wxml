@@ -21,6 +21,14 @@
       <view class="num">{{stats.totalFollowUps}}</view>
       <view class="muted">总跟进数</view>
     </view>
+    <view class="stat" wx:if="{{stats.dueToday !== undefined}}">
+      <view class="num">{{stats.dueToday}}</view>
+      <view class="muted">今日待跟进</view>
+    </view>
+    <view class="stat" wx:if="{{stats.overdue !== undefined}}">
+      <view class="num">{{stats.overdue}}</view>
+      <view class="muted">已逾期</view>
+    </view>
   </view>
 
   <view class="row">

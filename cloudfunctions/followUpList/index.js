@@ -87,6 +87,7 @@ exports.main = async (event, context) => {
       followUpDate: f.followUpDate,
       status: f.status,
       remarks: f.remarks,
+      nextFollowUpDate: f.nextFollowUpDate || '',
       durationFromLast: f.durationFromLast || 0,
       createdAt: f.createdAt
     }));

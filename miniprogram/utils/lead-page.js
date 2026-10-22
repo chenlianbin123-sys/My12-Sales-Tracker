@@ -1,7 +1,8 @@
 const { login } = require('./auth');
 const { formatDateOnly } = require('./date');
 const { getStatusText, getFilterStatusOptions } = require('./status');
-const { SORT_OPTIONS, toCsv, cleanPreferences } = require('./lead-tools');
+const { SORT_OPTIONS, DUE_OPTIONS, toCsv, cleanPreferences } = require('./lead-tools');
+const { chinaDay, dueMeta } = require('./due');
 
 // Shared controller keeps the anchor and sales screens consistent.
 module.exports = function createLeadPage(isAnchor) {
@@ -9,8 +10,14 @@ module.exports = function createLeadPage(isAnchor) {
     data: {
       isAnchor, leads: [], loading: false, error: '', userName: '',
       statusIndex: 0, statusOptions: getFilterStatusOptions(), sortOptions: SORT_OPTIONS,
+      dueIndex: 0, dueOptions: DUE_OPTIONS,
       sortIndex: 0, keyword: '', createdFrom: '', createdTo: '', unfollowed: false,
       page: 0, total: 0, hasMore: false, rememberFilters: false
+    },
+    onLoad(options) {
+      // 从首页待办卡片进入时，直接带上待跟进筛选
+      const due = options && options.due;
+      if (due && DUE_OPTIONS.some(option => option.value === due)) this._initialDue = due;
     },
     onShow() { this.loadLeads(); },
     onUnload() { this._requestId = (this._requestId || 0) + 1; },
@@ -41,11 +48,23 @@ module.exports = function createLeadPage(isAnchor) {
           this.setData({ ...cleanPreferences(saved), rememberFilters: !!saved, keyword: '', leads: [], page: 0 });
           append = false;
         }
+        // 一次性入口筛选：不写入本机偏好，避免覆盖用户自己保存的设置
+        let appliedInitialDue = false;
+        if (this._initialDue !== undefined) {
+          const index = DUE_OPTIONS.findIndex(option => option.value === this._initialDue);
+          if (index >= 0) {
+            this.setData({ dueIndex: index });
+            appliedInitialDue = true;
+            append = false;
+          }
+          this._initialDue = undefined;
+        }
         this.setData({ userName: user.name || '' });
         const params = {
           pageSize: 20, keyword: this.data.keyword.trim(),
           status: this.data.statusOptions[this.data.statusIndex].value,
           sort: SORT_OPTIONS[this.data.sortIndex].value,
+          due: DUE_OPTIONS[this.data.dueIndex].value,
           createdFrom: this.data.createdFrom, createdTo: this.data.createdTo, unfollowed: this.data.unfollowed
         };
         const filterKey = JSON.stringify(params);
@@ -55,17 +74,24 @@ module.exports = function createLeadPage(isAnchor) {
         const res = await wx.cloud.callFunction({ name: 'leadList', data: params });
         if (this._requestId !== requestId) return;
         if (!res.result || !res.result.success) throw new Error(res.result && res.result.message || '加载失败');
-        const list = (res.result.data.list || []).map(lead => ({
-          ...lead, lastFollowUpAt: lead.lastFollowUpAt ? formatDateOnly(lead.lastFollowUpAt) : '',
-          createdAtDate: formatDateOnly(lead.createdAt), lastStatusText: getStatusText(lead.lastStatus || lead.status)
-        }));
+        const list = (res.result.data.list || []).map(lead => {
+          const due = dueMeta(lead.nextFollowUpAt);
+          return {
+            ...lead,
+            lastFollowUpAt: lead.lastFollowUpAt ? formatDateOnly(lead.lastFollowUpAt) : '',
+            createdAtDate: formatDateOnly(lead.createdAt),
+            nextFollowUpDate: chinaDay(lead.nextFollowUpAt),
+            dueLevel: due.level, dueText: due.text,
+            lastStatusText: getStatusText(lead.lastStatus || lead.status)
+          };
+        });
         const combined = append ? this.data.leads.concat(list) : list;
         const seen = new Set();
         const leads = combined.filter(lead => !seen.has(lead._id) && seen.add(lead._id));
         const total = res.result.data.total;
         this._appliedFilters = filterKey;
         this.setData({ leads, page, total, hasMore: page * 20 < total });
-        this.savePreferences();
+        if (!appliedInitialDue) this.savePreferences();
       } catch (error) {
         if (this._requestId === requestId) {
           // Never leave stale results exportable under newly selected filters.
@@ -87,6 +113,7 @@ module.exports = function createLeadPage(isAnchor) {
     onSearch() { return this.loadLeads(); },
     onStatusChange(e) { this.setData({ statusIndex: Number(e.detail.value) }); this.loadLeads(); },
     onSortChange(e) { this.setData({ sortIndex: Number(e.detail.value) }); this.loadLeads(); },
+    onDueChange(e) { this.setData({ dueIndex: Number(e.detail.value) }); this.loadLeads(); },
     onFromChange(e) { this.setData({ createdFrom: e.detail.value }); this.loadLeads(); },
     onToChange(e) { this.setData({ createdTo: e.detail.value }); this.loadLeads(); },
     onUnfollowedChange(e) { this.setData({ unfollowed: e.detail.value }); this.loadLeads(); },

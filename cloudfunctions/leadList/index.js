@@ -138,6 +138,7 @@ exports.main = async (event = {}, context) => {
       remarks: lead.remarks,
       createdAt: lead.createdAt,
       lastFollowUpAt: lead.lastFollowUpAt,
+      nextFollowUpAt: lead.nextFollowUpAt || null,
       followUpCount: lead.followUpCount || 0,
       createdByAnchorId: lead.createdByAnchorId,
       createdByName: anchorMap[lead.createdByAnchorId] || '未知',

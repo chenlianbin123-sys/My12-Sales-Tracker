@@ -1,0 +1,9 @@
+{
+  "name": "leadCreateBatch",
+  "version": "1.0.0",
+  "description": "批量创建线索（主播，组内查重）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}
