@@ -27,10 +27,13 @@ exports.main = async (event, context) => {
     if (role !== 1) {
       return { success: false, message: '只有主播可以创建线索' };
     }
+    if (![1, 2, 3, 4].includes(groupId)) {
+      return { success: false, message: '请先联系管理员分配小组' };
+    }
 
     // 3. 参数校验
     const { phone, assignedSalesIds, remarks } = event;
-    if (!phone || !phone.trim()) {
+    if (typeof phone !== 'string' || !phone.trim()) {
       return { success: false, message: '客户电话不能为空' };
     }
 
@@ -100,6 +103,7 @@ exports.main = async (event, context) => {
       assignedSalesId: finalAssignedSalesIds[0] || null, // 主负责人（向后兼容）
       assignedSalesIds: finalAssignedSalesIds, // 多销售协作数组
       status: 'NEW',
+      lastStatus: 'NEW',
       remarks: remarks || '',
       createdAt: now,
       updatedAt: now,
