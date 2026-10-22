@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "description": "Local regression checks; cloud functions are deployed separately",
-  "scripts": {"test": "node --test tests/*.test.js"},
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "check:public": "node scripts/check-public-config.js"
+  },
   "engines": {"node": ">=20"}
 }

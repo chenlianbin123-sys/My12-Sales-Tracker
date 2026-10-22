@@ -4,3 +4,7 @@ coverage/
 .env
 .env.*
 !.env.example
+project.private.config.json
+*.private.config.json
+*.pem
+*.key
