@@ -29,7 +29,7 @@ Page({
     this.setData({
       role,
       roleText: roleName(role),
-      groupText: role === 0 ? "" : `（第${groupId}组）`,
+      groupText: role === 0 ? "" : `（团队 ${groupId}）`,
       userName: user.name || ""
     });
   },

@@ -3,6 +3,7 @@ const { login } = require('../../../utils/auth');
 Page({
   data: {
     phone: '',
+    customerName: '',
     remarks: '',
     groupSales: [],
     submitting: false
@@ -21,7 +22,7 @@ Page({
         return;
       }
 
-      // 查询本组销售
+      // 查询本团队成员
       const db = wx.cloud.database();
       const res = await db.collection('users')
         .where({
@@ -34,7 +35,7 @@ Page({
         groupSales: (res.data || []).map(s => ({ ...s, checked: false }))
       });
     } catch (error) {
-      console.error('加载销售列表失败:', error);
+      console.error('加载成员列表失败:', error);
       wx.showToast({ title: '加载失败', icon: 'none' });
     }
   },
@@ -42,6 +43,7 @@ Page({
   onPhoneInput(e) {
     this.setData({ phone: e.detail.value });
   },
+  onCustomerNameInput(e) { this.setData({ customerName: e.detail.value }); },
 
   onRemarksInput(e) {
     this.setData({ remarks: e.detail.value });
@@ -59,10 +61,10 @@ Page({
   },
 
   async onSubmit() {
-    const { phone, remarks, groupSales, submitting } = this.data;
+    const { phone, customerName, remarks, groupSales, submitting } = this.data;
     
-    if (!phone || !phone.trim()) {
-      wx.showToast({ title: '请输入客户电话', icon: 'none' });
+    if (!phone.trim() && !customerName.trim()) {
+      wx.showToast({ title: '请填写名称或电话', icon: 'none' });
       return;
     }
 
@@ -76,6 +78,7 @@ Page({
         name: 'leadCreate',
         data: {
           phone: phone.trim(),
+          customerName: customerName.trim(),
           remarks: remarks.trim(),
           assignedSalesIds: selectedSalesIds.length > 0 ? selectedSalesIds : undefined
         }

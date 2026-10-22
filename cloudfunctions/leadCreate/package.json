@@ -1,7 +1,7 @@
 {
   "name": "leadCreate",
   "version": "1.0.0",
-  "description": "创建线索（主播）",
+  "description": "创建线索（负责人）",
   "main": "index.js",
   "dependencies": {
     "wx-server-sdk": "~2.6.3"

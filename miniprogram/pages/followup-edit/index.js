@@ -78,7 +78,7 @@ Page({
       const statusMap = {
         'NEW': 'CONTACTED',
         'CONTACTED': 'QUOTED',
-        'QUOTED': 'QUOTED' // 已报价后需要手动选择成交或流失
+        'QUOTED': 'QUOTED' // 方案确认后需要手动选择已完成或已关闭
       };
       
       const nextStatus = statusMap[currentStatus];

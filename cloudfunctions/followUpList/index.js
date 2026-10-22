@@ -22,8 +22,8 @@ exports.main = async (event, context) => {
     const user = userRes.data[0];
     const { _id: userId, role, groupId } = user;
 
-    if ((role === 1 || role === 2) && ![1, 2, 3, 4].includes(groupId)) {
-      return { success: false, message: '请先联系管理员分配小组' };
+    if ((role === 1 || role === 2) && !(Number.isSafeInteger(groupId) && groupId > 0)) {
+      return { success: false, message: '请先联系管理员分配团队' };
     }
 
     // 2. 参数校验
@@ -41,12 +41,12 @@ exports.main = async (event, context) => {
 
     // 4. 权限校验
     if (role === 1) {
-      // 主播：只能查看本组线索
+      // 负责人：只能查看本团队线索
       if (lead.groupId !== groupId) {
         return { success: false, message: '无权限查看该线索' };
       }
     } else if (role === 2) {
-      // 销售：只能查看分配给自己（assignedSalesIds包含自己）的线索
+      // 成员：只能查看分配给自己（assignedSalesIds包含自己）的线索
       const assignedSalesIds = lead.assignedSalesIds || [];
       if (lead.groupId !== groupId || !Array.isArray(assignedSalesIds) || !assignedSalesIds.includes(userId)) {
         return { success: false, message: '无权限查看该线索' };
@@ -63,7 +63,7 @@ exports.main = async (event, context) => {
       .orderBy('followUpDate', 'desc')
       .get();
 
-    // 6. 查询销售姓名（用于显示）
+    // 6. 查询成员姓名（用于显示）
     const salesIds = [...new Set(followUpsRes.data.map(f => f.salesId))];
     let salesMap = {};
     if (salesIds.length > 0) {

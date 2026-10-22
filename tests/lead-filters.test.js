@@ -10,7 +10,8 @@ test('keyword search is literal and keeps group scope outside OR clauses', () =>
   const { query } = buildFilters(db, scope, { keyword: 'a.*[x]' });
   assert.deepEqual(query.and[0], scope);
   assert.equal(query.and[1].or[0].phone.regex.regexp, 'a\\.\\*\\[x\\]');
-  assert.equal(query.and[1].or[1].remarks.regex.options, 'i');
+  assert.equal(query.and[1].or[1].customerName.regex.options, 'i');
+  assert.equal(query.and[1].or[2].remarks.regex.options, 'i');
 });
 test('sort whitelist rejects arbitrary fields and prototype keys', () => {
   assert.deepEqual(buildFilters(db, scope, { sort: 'mostFollowed' }).order, ['followUpCount', 'desc']);

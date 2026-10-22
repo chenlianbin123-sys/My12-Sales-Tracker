@@ -24,6 +24,7 @@ function buildFilters(db, scope, event) {
     const literal = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     conditions.push(db.command.or([
       { phone: db.RegExp({ regexp: literal, options: 'i' }) },
+      { customerName: db.RegExp({ regexp: literal, options: 'i' }) },
       { remarks: db.RegExp({ regexp: literal, options: 'i' }) }
     ]));
   }

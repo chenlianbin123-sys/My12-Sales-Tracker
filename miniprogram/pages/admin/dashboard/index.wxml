@@ -21,7 +21,7 @@
       <button class="btn-action btn-primary" bindtap="goUsers">
         <text class="btn-icon">👥</text>
         <text class="btn-text">用户管理</text>
-        <text class="btn-desc">角色/小组设置</text>
+        <text class="btn-desc">角色/团队设置</text>
       </button>
       <button class="btn-action btn-primary" bindtap="goProfile">
         <text class="btn-icon">👤</text>
@@ -46,11 +46,11 @@
   </view>
 
   <view class="group-stats" wx:if="{{groupStats.length > 0}}">
-    <text class="section-title">各小组统计</text>
+    <text class="section-title">各团队统计</text>
     <view class="card group-card" wx:for="{{groupStats}}" wx:key="groupId">
       <view class="group-header">
-        <text class="group-name">第{{item.groupId}}组</text>
-        <text class="group-members">{{item.anchors}}主播 + {{item.sales}}销售</text>
+        <text class="group-name">团队 {{item.groupId}}</text>
+        <text class="group-members">{{item.anchors}}负责人 + {{item.sales}}成员</text>
       </view>
       <view class="group-summary">
         <view class="stat-item">
@@ -68,11 +68,11 @@
       </view>
       <view class="status-distribution">
         <text class="dist-label">状态分布：</text>
-        <text class="dist-item">未联系 {{item.statusStats.NEW}}</text>
-        <text class="dist-item">已联系 {{item.statusStats.CONTACTED}}</text>
-        <text class="dist-item">已报价 {{item.statusStats.QUOTED}}</text>
-        <text class="dist-item">成交 {{item.statusStats.WON}}</text>
-        <text class="dist-item">流失 {{item.statusStats.LOST}}</text>
+        <text class="dist-item">待处理 {{item.statusStats.NEW}}</text>
+        <text class="dist-item">沟通中 {{item.statusStats.CONTACTED}}</text>
+        <text class="dist-item">方案确认 {{item.statusStats.QUOTED}}</text>
+        <text class="dist-item">已完成 {{item.statusStats.WON}}</text>
+        <text class="dist-item">已关闭 {{item.statusStats.LOST}}</text>
       </view>
 
       <view class="group-leads">
@@ -83,7 +83,7 @@
         <view class="lead-row-wrapper" wx:for="{{item.leads}}" wx:for-item="leadItem" wx:key="_id">
           <view class="lead-row" data-id="{{leadItem._id}}" bindtap="goLeadDetail">
             <view class="lead-main">
-              <text class="lead-phone">{{leadItem.phone}}</text>
+              <text class="lead-phone">{{leadItem.customerName || leadItem.phone || '未命名事项'}}</text>
               <text class="lead-status tag-status tag-{{leadItem.lastStatus}}">{{leadItem.lastStatusText}}</text>
             </view>
             <view class="lead-meta">
@@ -91,7 +91,7 @@
               <text class="meta-text" style="margin-left: 12rpx;">跟进：{{leadItem.followUpCount || 0}}次</text>
             </view>
             <view class="lead-meta">
-              <text class="meta-text">主播：{{leadItem.createdBy}}</text>
+              <text class="meta-text">负责人：{{leadItem.createdBy}}</text>
               <text class="meta-text" style="margin-left: 12rpx;">创建：{{leadItem.createdAtDate || '—'}}</text>
             </view>
             <view class="lead-meta">

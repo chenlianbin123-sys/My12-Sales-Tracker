@@ -1,14 +1,14 @@
 <view class="container">
   <view class="card">
     <view class="row-between">
-      <text class="title">{{isAnchor ? '本组线索' : '我的线索'}}</text>
+      <text class="title">{{isAnchor ? '本团队线索' : '我的线索'}}</text>
       <button size="mini" bindtap="goProfile">个人中心</button>
     </view>
-    <view class="muted small">当前账号：{{userName || '加载中'}} · {{isAnchor ? '主播' : '销售'}}</view>
+    <view class="muted small">当前账号：{{userName || '加载中'}} · {{isAnchor ? '负责人' : '成员'}}</view>
     <button wx:if="{{isAnchor}}" class="btn-success" size="mini" bindtap="onAddLead">录入线索</button>
   </view>
   <view class="card filters">
-    <label class="filter-label">搜索客户电话或备注</label>
+    <label class="filter-label">搜索名称、电话或备注</label>
     <input class="search-input" value="{{keyword}}" maxlength="80" placeholder="输入关键词，点击搜索" bindinput="onKeywordInput" bindconfirm="onSearch" confirm-type="search" />
     <view class="filter-row">
       <picker mode="selector" range="{{statusOptions}}" range-key="label" value="{{statusIndex}}" bindchange="onStatusChange"><view class="picker">状态：{{statusOptions[statusIndex].label}}</view></picker>
@@ -33,14 +33,15 @@
   <view wx:if="{{error}}" class="card error-box"><text>{{error}}</text><button size="mini" bindtap="onRefresh">重试</button></view>
   <view class="card" wx:for="{{leads}}" wx:key="_id">
     <view bindtap="onLeadTap" data-id="{{item._id}}">
-      <view class="row-between"><text class="phone">{{item.phone}}</text><text class="tag-status">{{item.lastStatusText}}</text></view>
-      <view class="muted small">销售：{{item.assignedSalesNames || '未分配'}} · 跟进 {{item.followUpCount || 0}} 次</view>
+      <view class="row-between"><text class="phone">{{item.customerName || item.phone || '未命名事项'}}</text><text class="tag-status">{{item.lastStatusText}}</text></view>
+      <view class="muted small" wx:if="{{item.customerName && item.phone}}">{{item.phone}}</view>
+      <view class="muted small">成员：{{item.assignedSalesNames || '未分配'}} · 跟进 {{item.followUpCount || 0}} 次</view>
       <view class="muted small">创建 {{item.createdAtDate || '—'}} · 最近跟进 {{item.lastFollowUpAt || '未跟进'}}</view>
       <view class="lead-remark" wx:if="{{item.remarks}}">{{item.remarks}}</view>
     </view>
     <view class="filter-row actions">
-      <button size="mini" bindtap="onCall" data-phone="{{item.phone}}">拨号</button>
-      <button size="mini" bindtap="onCopy" data-phone="{{item.phone}}">复制电话</button>
+      <button wx:if="{{item.phone}}" size="mini" bindtap="onCall" data-phone="{{item.phone}}">拨号</button>
+      <button wx:if="{{item.phone}}" size="mini" bindtap="onCopy" data-phone="{{item.phone}}">复制电话</button>
       <button class="btn-success" size="mini" bindtap="onFollowUpTap" data-id="{{item._id}}">跟进</button>
       <button wx:if="{{isAnchor}}" size="mini" bindtap="onDeleteLead" data-id="{{item._id}}">删除</button>
     </view>

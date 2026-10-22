@@ -9,7 +9,7 @@ Page({
     followUps: [],
     loading: false,
     canAddFollowUp: false,
-    canDelete: false, // 是否可以删除（主播或管理员）
+    canDelete: false, // 是否可以删除（负责人或管理员）
     user: null
   },
 
@@ -52,25 +52,25 @@ Page({
           return;
         }
 
-        // 判断是否可以添加跟进：销售（已分配且同组）、主播（同组即可）
+        // 判断是否可以添加跟进：成员（已分配且同组）、负责人（同组即可）
         // 注意：authLogin 返回的用户ID字段是 userId，不是 _id
         const assignedSalesIds = lead.assignedSalesIds || [];
         const leadGroupId = lead.groupId;
         const userGroupId = user.groupId;
         const isSameGroup = leadGroupId == userGroupId; // 使用 == 处理类型差异
         
-        // 销售：验证 assignedSalesIds 是否包含自己（使用 userId 字段）
+        // 成员：验证 assignedSalesIds 是否包含自己（使用 userId 字段）
         const userId = user.userId || user._id; // 兼容两种字段名
         const isSalesAssigned = userId && Array.isArray(assignedSalesIds) && assignedSalesIds.length > 0 &&
           assignedSalesIds.some(id => String(id) === String(userId));
         const isSales = user.role === 2 && isSameGroup && isSalesAssigned;
         
-        // 主播：同组即可
+        // 负责人：同组即可
         const isAnchor = user.role === 1 && isSameGroup;
         
         const canAddFollowUp = isSales || isAnchor;
 
-        // 判断是否可以删除（主播或管理员）
+        // 判断是否可以删除（负责人或管理员）
         const canDelete = (user.role === 1 && lead.groupId === user.groupId) || user.role === 0;
 
         // 添加创建时间和创建者信息，状态转换为中文
@@ -98,7 +98,7 @@ Page({
         const followUps = (followUpRes.result.data.list || []).map(f => ({
           ...f,
           followUpDate: f.followUpDate ? formatDateOnly(f.followUpDate) : '',
-          salesId: f.salesId, // 保存销售ID用于跳转
+          salesId: f.salesId, // 保存成员ID用于跳转
           statusText: getStatusText(f.status) // 状态转换为中文
         }));
         this.setData({

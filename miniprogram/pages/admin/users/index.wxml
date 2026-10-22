@@ -3,7 +3,7 @@
   <view class="header card">
     <view>
       <view class="title">用户管理</view>
-      <view class="muted">为账号设置角色与小组（role/groupId）</view>
+      <view class="muted">为账号设置角色与团队（role/groupId）</view>
     </view>
     <button class="btn-primary" size="mini" bindtap="reload" loading="{{loading}}">刷新</button>
   </view>
@@ -12,9 +12,8 @@
     <picker mode="selector" range="{{roleOptions}}" range-key="label" value="{{roleIndex}}" bindchange="onRoleFilterChange">
       <view class="picker">{{roleOptions[roleIndex].label}}</view>
     </picker>
-    <picker mode="selector" range="{{groupOptions}}" range-key="label" value="{{groupIndex}}" bindchange="onGroupFilterChange">
-      <view class="picker">{{groupOptions[groupIndex].label}}</view>
-    </picker>
+    <input class="input" type="number" value="{{groupFilter}}" placeholder="团队编号（空为全部，0为未分配）" bindinput="onGroupFilterChange" bindconfirm="reload" />
+    <button size="mini" bindtap="reload">筛选</button>
   </view>
 
   <view class="card" wx:if="{{users.length === 0 && !loading}}">
@@ -52,12 +51,10 @@
         </picker>
       </view>
       <view class="modal-row">
-        <view class="label">小组</view>
-        <picker mode="selector" range="{{editGroupOptions}}" range-key="label" value="{{editDraft.groupIndex}}" bindchange="onEditGroup">
-          <view class="picker">{{editGroupOptions[editDraft.groupIndex].label}}</view>
-        </picker>
+        <view class="label">团队</view>
+        <input class="input" type="number" value="{{editDraft.groupId}}" bindinput="onEditGroup" placeholder="正整数团队编号" />
       </view>
-      <view class="muted small">提示：管理员角色 groupId 必须为 0；主播/销售必须为 1~4</view>
+      <view class="muted small">管理员团队编号为0；负责人和成员使用正整数团队编号，同编号组成团队。单人使用可设为负责人、团队1。</view>
       <view class="modal-actions">
         <button bindtap="closeEdit">取消</button>
         <button class="btn-primary" bindtap="saveEdit" loading="{{saving}}" disabled="{{saving}}">保存</button>

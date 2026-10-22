@@ -51,7 +51,7 @@
       <button class="btn-action btn-primary" bindtap="goUsers">
         <text class="btn-icon">👥</text>
         <text class="btn-text">用户管理</text>
-        <text class="btn-desc">角色/小组设置</text>
+        <text class="btn-desc">角色/团队设置</text>
       </button>
     </view>
   </view>

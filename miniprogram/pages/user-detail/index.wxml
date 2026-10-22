@@ -16,7 +16,7 @@
         <text class="value">{{user.roleText}}</text>
       </view>
       <view class="info-row">
-        <text class="label">小组</text>
+        <text class="label">团队</text>
         <text class="value">{{user.groupText}}</text>
       </view>
       <view class="info-row" wx:if="{{user.canSeePrivate && user.phone}}">

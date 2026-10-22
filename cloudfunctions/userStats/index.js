@@ -29,7 +29,10 @@ exports.main = async () => {
     };
   }
 
-  // 主播：统计本组线索数、已跟进线索数
+  if (![1, 2].includes(me.role) || !Number.isSafeInteger(me.groupId) || me.groupId < 1) {
+    return { success: false, message: '请先联系管理员分配有效团队' };
+  }
+  // 负责人：统计本团队线索数、已跟进线索数
   if (me.role === 1) {
     const groupId = me.groupId;
     const totalLeadsRes = await db.collection("leads").where({ groupId }).count().catch(() => ({ total: 0 }));
@@ -53,10 +56,10 @@ exports.main = async () => {
     };
   }
 
-  // 销售：统计分配给我的线索数、我写的跟进数、已跟进线索数（followUpCount>0）
+  // 成员：统计分配给我的线索数、我写的跟进数、已跟进线索数（followUpCount>0）
   const totalLeadsRes = await db
     .collection("leads")
-    .where({ assignedSalesIds: userId })
+    .where({ assignedSalesIds: userId, groupId: me.groupId })
     .count()
     .catch(() => ({ total: 0 }));
 
@@ -64,6 +67,7 @@ exports.main = async () => {
     .collection("leads")
     .where({
       assignedSalesIds: userId,
+      groupId: me.groupId,
       followUpCount: db.command.gt(0)
     })
     .count()
@@ -71,7 +75,7 @@ exports.main = async () => {
 
   const myFollowUpsRes = await db
     .collection("followUps")
-    .where({ salesId: userId })
+    .where({ salesId: userId, groupId: me.groupId })
     .count()
     .catch(() => ({ total: 0 }));
 

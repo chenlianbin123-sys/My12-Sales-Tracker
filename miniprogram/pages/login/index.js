@@ -28,10 +28,10 @@ Page({
       // 根据角色直接进入对应主页
       const role = user.role;
       if (role === 1) {
-        // 主播：进入本组线索列表（主播首页）
+        // 负责人：进入本团队线索列表（负责人首页）
         wx.reLaunch({ url: "/pages/anchor/leads/index" });
       } else if (role === 2) {
-        // 销售：进入我的线索列表（销售首页）
+        // 成员：进入我的线索列表（成员首页）
         wx.reLaunch({ url: "/pages/sales/leads/index" });
       } else if (role === 0) {
         // 管理员：进入数据看板（管理员首页）

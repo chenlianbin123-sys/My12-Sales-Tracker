@@ -20,8 +20,8 @@ function sanitizeRole(role) {
 function sanitizeGroupId(groupId) {
   if (groupId === undefined) return undefined;
   if (typeof groupId !== "number") return undefined;
-  // 管理员 groupId 允许 0；主播/销售 允许 1~4
-  if (![0, 1, 2, 3, 4].includes(groupId)) return undefined;
+  // 管理员 groupId 允许 0；负责人/成员 允许正整数
+  if (!Number.isSafeInteger(groupId) || groupId < 0) return undefined;
   return groupId;
 }
 
@@ -44,6 +44,7 @@ exports.main = async (event) => {
   const name = sanitizeName(event?.name);
   const role = sanitizeRole(event?.role);
   const groupId = sanitizeGroupId(event?.groupId);
+  if (event?.groupId !== undefined && groupId === undefined) return { success: false, message: '团队编号须为非负安全整数' };
 
   if (name === undefined && role === undefined && groupId === undefined) {
     return { success: false, message: "没有可更新字段" };
@@ -63,13 +64,14 @@ exports.main = async (event) => {
       return { success: false, message: "管理员 groupId 必须为 0" };
     }
   } else {
-    // 主播/销售 groupId 必须 1~4
-    if (![1, 2, 3, 4].includes(newGroupId)) {
-      return { success: false, message: "主播/销售 groupId 必须为 1~4" };
+    // 负责人/成员 groupId 必须为正整数
+    if (!Number.isSafeInteger(newGroupId) || newGroupId < 1) {
+      return { success: false, message: "负责人/成员须分配正整数团队编号" };
     }
   }
 
   const update = { updatedAt: new Date() };
+  if (newRole === 0) update.groupId = 0;
   if (name !== undefined) update.name = name;
   if (role !== undefined) update.role = role;
   if (groupId !== undefined) update.groupId = groupId;

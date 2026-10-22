@@ -4,11 +4,11 @@
 
 // 状态映射：英文 -> 中文
 const STATUS_MAP = {
-  'NEW': '未联系',
-  'CONTACTED': '已联系',
-  'QUOTED': '已报价',
-  'WON': '成交',
-  'LOST': '流失'
+  'NEW': '待处理',
+  'CONTACTED': '沟通中',
+  'QUOTED': '方案确认',
+  'WON': '已完成',
+  'LOST': '已关闭'
 };
 
 /**
@@ -26,11 +26,11 @@ function getStatusText(status) {
  */
 function getStatusOptions() {
   return [
-    { label: '未联系', value: 'NEW' },
-    { label: '已联系', value: 'CONTACTED' },
-    { label: '已报价', value: 'QUOTED' },
-    { label: '成交', value: 'WON' },
-    { label: '流失', value: 'LOST' }
+    { label: '待处理', value: 'NEW' },
+    { label: '沟通中', value: 'CONTACTED' },
+    { label: '方案确认', value: 'QUOTED' },
+    { label: '已完成', value: 'WON' },
+    { label: '已关闭', value: 'LOST' }
   ];
 }
 

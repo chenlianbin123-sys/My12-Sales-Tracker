@@ -28,8 +28,8 @@
     <view class="value">{{roleText}}</view>
   </view>
   <view class="row" wx:if="{{user.role !== 0}}">
-    <view class="label">小组</view>
-    <view class="value">第{{user.groupId}}组</view>
+    <view class="label">团队</view>
+    <view class="value">团队 {{user.groupId}}</view>
   </view>
   <view class="row">
     <view class="label">昵称/姓名</view>

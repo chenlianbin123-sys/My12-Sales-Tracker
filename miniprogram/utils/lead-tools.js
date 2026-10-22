@@ -9,8 +9,8 @@ function csvCell(value) {
   return '"' + text.replace(/"/g, '""') + '"';
 }
 function toCsv(leads) {
-  const rows = [['客户电话', '状态', '跟进次数', '协作销售', '创建日期', '最近跟进', '备注']];
-  leads.forEach(lead => rows.push([lead.phone, lead.lastStatusText, lead.followUpCount || 0,
+  const rows = [['客户/事项名称', '联系电话', '状态', '跟进次数', '协作成员', '创建日期', '最近跟进', '备注']];
+  leads.forEach(lead => rows.push([lead.customerName || '', lead.phone, lead.lastStatusText, lead.followUpCount || 0,
     lead.assignedSalesNames, lead.createdAtDate, lead.lastFollowUpAt || '', lead.remarks || '']));
   return '\uFEFF' + rows.map(row => row.map(csvCell).join(',')).join('\r\n');
 }

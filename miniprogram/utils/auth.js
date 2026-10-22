@@ -45,8 +45,8 @@ async function login(options = {}) {
 
 function roleName(role) {
   if (role === 0) return "管理员";
-  if (role === 1) return "主播";
-  if (role === 2) return "销售";
+  if (role === 1) return "负责人";
+  if (role === 2) return "成员";
   return "未知";
 }
 
@@ -54,7 +54,7 @@ function getRolePermissions(role) {
   if (role === 0) {
     return "查看全量数据、删除线索、管理用户";
   } else if (role === 1) {
-    return "录入线索、查看本组线索、分配销售、删除本组线索、添加跟进";
+    return "录入线索、查看本团队线索、分配成员、删除本团队线索、添加跟进";
   } else if (role === 2) {
     return "查看分配线索、添加跟进记录、推进线索进程";
   }

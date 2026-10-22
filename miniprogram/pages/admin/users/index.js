@@ -3,37 +3,27 @@ const { login } = require("../../../utils/auth");
 const ROLE_OPTIONS = [
   { label: "全部角色", value: null },
   { label: "管理员(0)", value: 0 },
-  { label: "主播(1)", value: 1 },
-  { label: "销售(2)", value: 2 }
+  { label: "负责人(1)", value: 1 },
+  { label: "成员(2)", value: 2 }
 ];
 
-const GROUP_OPTIONS = [
-  { label: "全部小组", value: null },
-  { label: "0（管理员）", value: 0 },
-  { label: "第1组", value: 1 },
-  { label: "第2组", value: 2 },
-  { label: "第3组", value: 3 },
-  { label: "第4组", value: 4 }
-];
 
 Page({
   data: {
     loading: false,
     users: [],
     roleOptions: ROLE_OPTIONS,
-    groupOptions: GROUP_OPTIONS,
+    groupFilter: '',
     roleIndex: 0,
-    groupIndex: 0,
     editing: false,
     saving: false,
     editUserId: "",
     editDraft: {
       name: "",
       roleIndex: 1,
-      groupIndex: 1
+      groupId: '1'
     },
-    editRoleOptions: ROLE_OPTIONS.slice(1), // 不含“全部”
-    editGroupOptions: GROUP_OPTIONS.slice(1) // 不含“全部”
+    editRoleOptions: ROLE_OPTIONS.slice(1) // 不含“全部”
   },
 
   onLoad() {
@@ -51,7 +41,8 @@ Page({
       }
 
       const roleValue = this.data.roleOptions[this.data.roleIndex].value;
-      const groupValue = this.data.groupOptions[this.data.groupIndex].value;
+      const groupValue = this.data.groupFilter.trim() === '' ? null : Number(this.data.groupFilter);
+      if (groupValue !== null && (!Number.isSafeInteger(groupValue) || groupValue < 0)) throw new Error('团队编号须为非负整数');
 
       const res = await wx.cloud.callFunction({
         name: "adminUserList",
@@ -75,21 +66,19 @@ Page({
   },
 
   onGroupFilterChange(e) {
-    this.setData({ groupIndex: Number(e.detail.value) });
-    this.reload();
+    this.setData({ groupFilter: e.detail.value });
   },
 
   openEdit(e) {
     const u = e.currentTarget.dataset.user;
     const roleIdx = this.data.editRoleOptions.findIndex((x) => x.value === u.role);
-    const groupIdx = this.data.editGroupOptions.findIndex((x) => x.value === (u.groupId || 0));
     this.setData({
       editing: true,
       editUserId: u._id,
       editDraft: {
         name: u.name || "",
-        roleIndex: roleIdx >= 0 ? roleIdx : 2, // 默认销售
-        groupIndex: groupIdx >= 0 ? groupIdx : 1 // 默认第1组
+        roleIndex: roleIdx >= 0 ? roleIdx : 2, // 默认成员
+        groupId: String(u.groupId || 0)
       }
     });
   },
@@ -108,13 +97,12 @@ Page({
     // 管理员 role=0 时，自动把 group 置到 0
     const role = this.data.editRoleOptions[Number(e.detail.value)].value;
     if (role === 0) {
-      const idx0 = this.data.editGroupOptions.findIndex((x) => x.value === 0);
-      this.setData({ "editDraft.groupIndex": idx0 >= 0 ? idx0 : 0 });
+      this.setData({ "editDraft.groupId": '0' });
     }
   },
 
   onEditGroup(e) {
-    this.setData({ "editDraft.groupIndex": Number(e.detail.value) });
+    this.setData({ "editDraft.groupId": e.detail.value });
   },
 
   async saveEdit() {
@@ -122,7 +110,10 @@ Page({
     const userId = this.data.editUserId;
     const name = (this.data.editDraft.name || "").trim();
     const role = this.data.editRoleOptions[this.data.editDraft.roleIndex].value;
-    const groupId = this.data.editGroupOptions[this.data.editDraft.groupIndex].value;
+    const groupId = role === 0 ? 0 : Number(this.data.editDraft.groupId);
+    if (!Number.isSafeInteger(groupId) || (role !== 0 && groupId < 1)) {
+      wx.showToast({ title: '请输入正整数团队编号', icon: 'none' }); return;
+    }
 
     if (!name) {
       wx.showToast({ title: "昵称不能为空", icon: "none" });
