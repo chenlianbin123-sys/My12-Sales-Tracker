@@ -1,6 +1,6 @@
 {
   "name": "my12-sales-tracker-checks",
-  "version": "0.1.0",
+  "version": "0.2.0-dev",
   "private": true,
   "description": "Local regression checks; cloud functions are deployed separately",
   "scripts": {

@@ -7,8 +7,8 @@ cloud.init({
 const db = cloud.database();
 
 /**
- * 创建线索（主播）
- * 支持多销售协作：可指定一个或多个销售ID
+ * 创建线索（负责人）
+ * 支持多成员协作：可指定一个或多个成员ID
  */
 exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext();
@@ -23,24 +23,27 @@ exports.main = async (event, context) => {
     const user = userRes.data[0];
     const { _id: userId, role, groupId } = user;
 
-    // 2. 权限校验：只有主播可以创建线索
+    // 2. 权限校验：只有负责人可以创建线索
     if (role !== 1) {
-      return { success: false, message: '只有主播可以创建线索' };
+      return { success: false, message: '只有负责人可以创建线索' };
     }
-    if (![1, 2, 3, 4].includes(groupId)) {
-      return { success: false, message: '请先联系管理员分配小组' };
+    if (!(Number.isSafeInteger(groupId) && groupId > 0)) {
+      return { success: false, message: '请先联系管理员分配团队' };
     }
 
     // 3. 参数校验
-    const { phone, assignedSalesIds, remarks } = event;
-    if (typeof phone !== 'string' || !phone.trim()) {
-      return { success: false, message: '客户电话不能为空' };
+    const { phone = '', customerName = '', assignedSalesIds, remarks } = event;
+    if (typeof phone !== 'string' || typeof customerName !== 'string' || (!phone.trim() && !customerName.trim())) {
+      return { success: false, message: '请填写客户/事项名称或联系电话' };
+    }
+    if (customerName.trim().length > 100 || phone.length > 50 || (remarks !== undefined && typeof remarks !== 'string')) {
+      return { success: false, message: '名称最多100字符，电话最多50字符，备注须为文本' };
     }
 
-    // 4. 如果指定了销售ID，验证销售是否在本组
+    // 4. 如果指定了成员ID，验证成员是否在本团队
     let finalAssignedSalesIds = [];
     if (assignedSalesIds && Array.isArray(assignedSalesIds) && assignedSalesIds.length > 0) {
-      // 查询指定的销售是否都在本组
+      // 查询指定的成员是否都在本团队
       const salesRes = await db.collection('users')
         .where({
           _id: db.command.in(assignedSalesIds),
@@ -50,11 +53,11 @@ exports.main = async (event, context) => {
         .get();
       
       if (salesRes.data.length !== assignedSalesIds.length) {
-        return { success: false, message: '指定的销售不在本组或不存在' };
+        return { success: false, message: '指定的成员不在本团队或不存在' };
       }
       finalAssignedSalesIds = assignedSalesIds;
     } else {
-      // 5. 如果没有指定销售，自动分配本组最少负载的销售
+      // 5. 如果没有指定成员，自动分配本团队最少负载的成员
       const salesRes = await db.collection('users')
         .where({
           role: 2,
@@ -63,10 +66,11 @@ exports.main = async (event, context) => {
         .get();
       
       if (salesRes.data.length === 0) {
-        return { success: false, message: '本组没有销售，无法分配' };
-      }
+        // A single-person team can start immediately; managers already have team access.
+        finalAssignedSalesIds = [userId];
+      } else {
 
-      // 统计每个销售的线索数量（分配给自己或包含自己的）
+      // 统计每个成员的线索数量（分配给自己或包含自己的）
       const salesIds = salesRes.data.map(s => s._id);
       const leadsRes = await db.collection('leads')
         .where({
@@ -75,7 +79,7 @@ exports.main = async (event, context) => {
         })
         .get();
 
-      // 统计每个销售的线索数
+      // 统计每个成员的线索数
       const salesLeadCount = {};
       salesIds.forEach(id => salesLeadCount[id] = 0);
       leadsRes.data.forEach(lead => {
@@ -88,10 +92,11 @@ exports.main = async (event, context) => {
         }
       });
 
-      // 找到最少负载的销售（如果有多个，取第一个）
+      // 找到最少负载的成员（如果有多个，取第一个）
       const minCount = Math.min(...Object.values(salesLeadCount));
       const minSalesId = Object.keys(salesLeadCount).find(id => salesLeadCount[id] === minCount);
       finalAssignedSalesIds = [minSalesId];
+      }
     }
 
     // 6. 创建线索
@@ -99,9 +104,10 @@ exports.main = async (event, context) => {
     const leadData = {
       groupId: groupId,
       phone: phone.trim(),
+      customerName: customerName.trim(),
       createdByAnchorId: userId,
       assignedSalesId: finalAssignedSalesIds[0] || null, // 主负责人（向后兼容）
-      assignedSalesIds: finalAssignedSalesIds, // 多销售协作数组
+      assignedSalesIds: finalAssignedSalesIds, // 多成员协作数组
       status: 'NEW',
       lastStatus: 'NEW',
       remarks: remarks || '',

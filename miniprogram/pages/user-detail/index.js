@@ -10,8 +10,8 @@ function formatDateOnly(date) {
 
 function roleName(role) {
   if (role === 0) return "管理员";
-  if (role === 1) return "主播";
-  if (role === 2) return "销售";
+  if (role === 1) return "负责人";
+  if (role === 2) return "成员";
   return "未知";
 }
 
@@ -90,7 +90,7 @@ Page({
             ...user,
             createdAtDate: user.createdAt ? formatDateOnly(user.createdAt) : '',
             roleText: roleName(user.role),
-            groupText: user.groupId > 0 ? `第${user.groupId}组` : '未分配',
+            groupText: user.groupId > 0 ? `团队 ${user.groupId}` : '未分配',
             canSeePrivate: canSeePrivate // 前端权限标记
           },
           currentUser,
@@ -113,10 +113,10 @@ Page({
     
     // 根据用户角色跳转到对应的线索列表页面
     if (user.role === 1) {
-      // 主播：跳转到主播线索列表
+      // 负责人：跳转到负责人线索列表
       wx.navigateTo({ url: '/pages/anchor/leads/index' });
     } else if (user.role === 2) {
-      // 销售：跳转到销售线索列表
+      // 成员：跳转到成员线索列表
       wx.navigateTo({ url: '/pages/sales/leads/index' });
     }
   }

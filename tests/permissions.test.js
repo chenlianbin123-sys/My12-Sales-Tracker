@@ -6,24 +6,28 @@ const vm = require('node:vm');
 const { createRequire } = require('node:module');
 
 // Isolated cloud-function harness: no SDK installation, credentials or cloud writes.
-function load(name, user, lead = {}) {
+function load(name, user, lead = {}, options = {}) {
   const calls = [];
   const db = {
     command: Object.fromEntries(['in', 'and', 'or', 'exists', 'gte', 'lt'].map(key => [key, values => ({ [key]: values })])),
     RegExp: value => ({ regex: value }),
     collection(collection) {
       const query = {
-        where(value) { calls.push({ collection, where: value }); return this; },
+        where(value) { this.filter = value; calls.push({ collection, where: value }); return this; },
         orderBy() { return this; },
         skip(value) { calls.push({ skip: value }); return this; },
         limit(value) { calls.push({ limit: value }); return this; },
         field() { return this; },
         doc() { this.isDoc = true; return this; },
         async get() {
+          if (this.isDoc) return { data: lead };
+          if (collection === 'users' && this.filter && this.filter.role === 2 && options.members) return { data: options.members };
+          if (!this.filter && options.collections && options.collections[collection]) return { data: options.collections[collection] };
           if (collection === 'users') return { data: [user] };
           return { data: this.isDoc ? lead : [] };
         },
         async count() { return { total: 0 }; },
+        async update(value) { Object.assign(lead, value.data); calls.push({ update: value }); return {}; },
         async add(value) { calls.push({ add: value }); return { _id: 'new-lead' }; }
       };
       return query;
@@ -118,4 +122,66 @@ test('invalid filter input returns a readable failure before database query', as
     assert.equal((await main(params)).success, false);
     assert.equal(calls.some(call => call.collection === 'leads'), false);
   }
+});
+
+test('teams above four work without broadening member scope', async () => {
+  const { main, calls } = load('leadList', { _id: 'member', role: 2, groupId: 105 });
+  assert.equal((await main({})).success, true);
+  assert.equal(calls.find(call => call.collection === 'leads').where.groupId, 105);
+});
+
+test('solo manager creates a named item without requiring phone or members', async () => {
+  const { main, calls } = load('leadCreate', { _id: 'manager', role: 1, groupId: 42 }, {}, { members: [] });
+  const result = await main({ customerName: '服务事项' });
+  assert.equal(result.success, true);
+  const data = calls.find(call => call.add).add.data;
+  assert.equal(data.customerName, '服务事项');
+  assert.equal(data.phone, '');
+  assert.equal(data.assignedSalesIds[0], 'manager');
+});
+
+test('generic item still requires name or phone and validates field types', async () => {
+  for (const event of [{}, { customerName: [] }, { customerName: 'x', remarks: {} }]) {
+    const { main, calls } = load('leadCreate', { _id: 'manager', role: 1, groupId: 1 });
+    assert.equal((await main(event)).success, false);
+    assert.equal(calls.some(call => call.add), false);
+  }
+});
+
+test('admin assigns arbitrary positive team IDs and normalizes promoted admin team', async () => {
+  const target = { _id: 'target', role: 2, groupId: 1 };
+  const { main, calls } = load('adminUserUpdate', { _id: 'admin', role: 0 }, target);
+  assert.equal((await main({ userId: 'target', groupId: 88 })).success, true);
+  assert.equal(target.groupId, 88);
+  assert.equal((await main({ userId: 'target', role: 0 })).success, true);
+  assert.equal(calls[calls.length - 1].update.data.groupId, 0);
+});
+
+test('dashboard discovers actual teams instead of inventing four empty groups', async () => {
+  const admin = { _id: 'admin', role: 0, groupId: 0 };
+  const manager = { _id: 'manager', role: 1, groupId: 42 };
+  const { main } = load('adminDashboard', admin, {}, { collections: {
+    users: [admin, manager], leads: [], followUps: []
+  } });
+  const result = await main({});
+  assert.equal(result.success, true);
+  assert.equal(result.data.groupStats.length, 1);
+  assert.equal(result.data.groupStats[0].groupId, 42);
+});
+
+test('invalid team assignments are rejected without updating users', async () => {
+  for (const groupId of [-1, 1.5, '9', Number.MAX_SAFE_INTEGER + 1]) {
+    const { main, calls } = load('adminUserUpdate', { _id: 'admin', role: 0 }, { role: 2, groupId: 1 });
+    assert.equal((await main({ userId: 'target', groupId })).success, false);
+    assert.equal(calls.some(call => call.update), false);
+  }
+});
+
+test('public role and workflow labels use general-purpose vocabulary', () => {
+  const { roleName } = require('../miniprogram/utils/auth');
+  const { getStatusText } = require('../miniprogram/utils/status');
+  assert.equal(roleName(1), '负责人');
+  assert.equal(roleName(2), '成员');
+  assert.equal(getStatusText('WON'), '已完成');
+  assert.equal(getStatusText('LOST'), '已关闭');
 });

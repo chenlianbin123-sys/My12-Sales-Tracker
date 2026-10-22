@@ -11,11 +11,11 @@ Page({
     statusIndex: 0,
     statusOptions: [
       { label: '全部状态', value: '' },
-      { label: '未联系', value: 'NEW' },
-      { label: '已联系', value: 'CONTACTED' },
-      { label: '已报价', value: 'QUOTED' },
-      { label: '成交', value: 'WON' },
-      { label: '流失', value: 'LOST' }
+      { label: '待处理', value: 'NEW' },
+      { label: '沟通中', value: 'CONTACTED' },
+      { label: '方案确认', value: 'QUOTED' },
+      { label: '已完成', value: 'WON' },
+      { label: '已关闭', value: 'LOST' }
     ]
   },
 

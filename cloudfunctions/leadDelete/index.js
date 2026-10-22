@@ -7,8 +7,8 @@ cloud.init({
 const db = cloud.database();
 
 /**
- * 删除线索（主播/管理员）
- * - 主播：只能删除本组的线索
+ * 删除线索（负责人/管理员）
+ * - 负责人：只能删除本团队的线索
  * - 管理员：可以删除所有线索
  */
 exports.main = async (event, context) => {
@@ -24,10 +24,11 @@ exports.main = async (event, context) => {
     const user = userRes.data[0];
     const { _id: userId, role, groupId } = user;
 
-    // 2. 权限校验：只有主播或管理员可以删除线索
+    // 2. 权限校验：只有负责人或管理员可以删除线索
     if (role !== 1 && role !== 0) {
-      return { success: false, message: '只有主播或管理员可以删除线索' };
+      return { success: false, message: '只有负责人或管理员可以删除线索' };
     }
+    if (role === 1 && (!Number.isSafeInteger(groupId) || groupId < 1)) return { success: false, message: '请先分配有效团队' };
 
     // 3. 参数校验
     const { leadId } = event;
@@ -42,9 +43,9 @@ exports.main = async (event, context) => {
       return { success: false, message: '线索不存在' };
     }
 
-    // 5. 权限校验：主播只能删除本组线索
+    // 5. 权限校验：负责人只能删除本团队线索
     if (role === 1 && lead.groupId !== groupId) {
-      return { success: false, message: '只能删除本组线索' };
+      return { success: false, message: '只能删除本团队线索' };
     }
 
     // 6. 删除该线索的所有跟进记录

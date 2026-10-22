@@ -8,8 +8,8 @@ cloud.init({
 const db = cloud.database();
 
 /**
- * 创建跟进记录（销售/主播）
- * 多销售协作：销售需在 assignedSalesIds 中；主播可对自己创建且同组的线索添加
+ * 创建跟进记录（成员/负责人）
+ * 多成员协作：成员需在 assignedSalesIds 中；负责人可对自己创建且同组的线索添加
  */
 exports.main = async (event = {}, context) => {
   const wxContext = cloud.getWXContext();
@@ -24,11 +24,11 @@ exports.main = async (event = {}, context) => {
     const user = userRes.data[0];
     const { _id: userId, role, groupId } = user;
 
-    // 2. 权限校验：销售/主播可创建跟进
+    // 2. 权限校验：成员/负责人可创建跟进
     const isSales = role === 2;
     const isAnchor = role === 1;
     if (!isSales && !isAnchor) {
-      return { success: false, message: '只有销售或主播可以创建跟进记录' };
+      return { success: false, message: '只有成员或负责人可以创建跟进记录' };
     }
 
     // 3. 参数校验
@@ -54,7 +54,7 @@ exports.main = async (event = {}, context) => {
 
     // 5. 权限校验
     const assignedSalesIds = Array.isArray(lead.assignedSalesIds) ? lead.assignedSalesIds : [];
-    const isSameGroup = [1, 2, 3, 4].includes(groupId) && lead.groupId === groupId;
+    const isSameGroup = (Number.isSafeInteger(groupId) && groupId > 0) && lead.groupId === groupId;
     const isAssignedSales = isSales && isSameGroup && assignedSalesIds.includes(userId);
     const isGroupAnchor = isAnchor && isSameGroup;
 
@@ -83,10 +83,10 @@ exports.main = async (event = {}, context) => {
       const statusFlow = {
         'NEW': 'CONTACTED',
         'CONTACTED': 'QUOTED',
-        'QUOTED': status // 已报价后需要手动选择成交或流失
+        'QUOTED': status // 方案确认后需要手动选择已完成或已关闭
       };
       
-      // 如果当前状态在流程中，且新状态不是成交或流失，则使用流程中的下一个状态
+      // 如果当前状态在流程中，且新状态不是已完成或已关闭，则使用流程中的下一个状态
       if (statusFlow[currentStatus] && status !== 'WON' && status !== 'LOST') {
         finalStatus = statusFlow[currentStatus];
       }
@@ -121,13 +121,13 @@ exports.main = async (event = {}, context) => {
       updateData.firstFollowUpAt = new Date(followUpDate);
     }
 
-    // 如果状态是成交
+    // 如果状态是已完成
     if (finalStatus === 'WON') {
       updateData.wonAt = new Date(followUpDate);
       updateData.status = 'WON';
     }
 
-    // 如果状态是流失
+    // 如果状态是已关闭
     if (finalStatus === 'LOST') {
       updateData.lostAt = new Date(followUpDate);
       updateData.status = 'LOST';

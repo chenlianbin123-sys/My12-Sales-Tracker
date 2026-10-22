@@ -13,8 +13,8 @@ function isValidCnMobile(phone) {
 
 /**
  * 用户注册（必须手机号 + 选择角色）
- * - role: 1 主播 / 2 销售
- * - 默认不分配小组：groupId = 0
+ * - role: 1 负责人 / 2 成员
+ * - 默认不分配团队：groupId = 0
  */
 exports.main = async (event) => {
   const wxContext = cloud.getWXContext();
@@ -27,7 +27,7 @@ exports.main = async (event) => {
     const name = String(event.name || "").trim();
 
     if (![1, 2].includes(role)) {
-      return { success: false, message: "请选择角色（主播/销售）" };
+      return { success: false, message: "请选择角色（负责人/成员）" };
     }
     if (!isValidCnMobile(phone)) {
       return { success: false, message: "请输入正确的手机号" };
@@ -68,7 +68,7 @@ exports.main = async (event) => {
     const userDoc = {
       openid,
       role,
-      groupId: 0, // 默认不分配小组
+      groupId: 0, // 默认不分配团队
       name: name || phone, // 默认用手机号作为显示名称
       phone,
       wechat: "",

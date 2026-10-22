@@ -1,7 +1,7 @@
 {
   "name": "leadDelete",
   "version": "1.0.0",
-  "description": "删除线索（主播/管理员）",
+  "description": "删除线索（负责人/管理员）",
   "main": "index.js",
   "dependencies": {
     "wx-server-sdk": "~2.6.3"

@@ -1,5 +1,6 @@
 <!--线索详情页（通用）-->
 <view class="container">
+  <view class="card" wx:if="{{lead.customerName}}"><text class="title">{{lead.customerName}}</text></view>
   <view class="card" wx:if="{{lead}}">
     <view>
       <view class="info-row">
@@ -15,7 +16,7 @@
         <text class="value">{{lead.createdByName || '未知'}}</text>
       </view>
       <view class="info-row">
-        <text class="label">分配销售：</text>
+        <text class="label">分配成员：</text>
         <text class="value">{{lead.assignedSalesNames || '未分配'}}</text>
       </view>
       <view class="info-row">

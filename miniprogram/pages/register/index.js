@@ -1,7 +1,7 @@
 Page({
   data: {
     phone: "",
-    role: 2, // 默认销售
+    role: 2, // 默认成员
     name: "",
     submitting: false
   },
@@ -52,7 +52,7 @@ Page({
         wx.setStorageSync("user", user);
       } catch (e) {}
 
-      // 注册后按角色进入主页（不分配小组）
+      // 注册后按角色进入主页（不分配团队）
       if (user.role === 1) {
         wx.reLaunch({ url: "/pages/anchor/leads/index" });
       } else {

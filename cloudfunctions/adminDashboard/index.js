@@ -7,9 +7,19 @@ cloud.init({
 const db = cloud.database();
 const _ = db.command;
 
+async function readAll(name) {
+  const rows = [];
+  for (let skip = 0; skip < 10000; skip += 100) {
+    const page = await db.collection(name).orderBy('_id', 'asc').skip(skip).limit(100).get();
+    rows.push(...page.data);
+    if (page.data.length < 100) return { data: rows };
+  }
+  throw new Error('统计数据量过大，请改用聚合统计');
+}
+
 /**
  * 管理员数据看板统计
- * 统计各小组：线索总数、已跟进率、按状态分布
+ * 统计各团队：线索总数、已跟进率、按状态分布
  */
 exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext();
@@ -30,18 +40,18 @@ exports.main = async (event, context) => {
     }
 
     // 3. 查询所有用户（用于名称映射）
-    const allUsersRes = await db.collection('users').get();
+    const allUsersRes = await readAll('users');
     const userNameMap = {};
     allUsersRes.data.forEach(u => {
       userNameMap[u._id] = u.name || '未命名';
     });
 
     // 4. 查询所有线索（按组统计）
-    const allLeadsRes = await db.collection('leads').get();
+    const allLeadsRes = await readAll('leads');
     const allLeads = allLeadsRes.data;
 
     // 5. 查询所有跟进记录（用于计算已跟进率）
-    const allFollowUpsRes = await db.collection('followUps').get();
+    const allFollowUpsRes = await readAll('followUps');
     const followUpsByLeadId = {};
     allFollowUpsRes.data.forEach(f => {
       if (!followUpsByLeadId[f.leadId]) {
@@ -52,7 +62,9 @@ exports.main = async (event, context) => {
 
     // 6. 按组统计
     const groupStats = {};
-    for (let groupId = 1; groupId <= 4; groupId++) {
+    const teamIds = [...new Set([...allUsersRes.data, ...allLeads].map(row => row.groupId))]
+      .filter(id => Number.isSafeInteger(id) && id > 0).sort((a, b) => a - b);
+    for (const groupId of teamIds) {
       const groupLeads = allLeads.filter(l => l.groupId === groupId);
       const totalLeads = groupLeads.length;
       
@@ -75,10 +87,8 @@ exports.main = async (event, context) => {
         }
       });
 
-      // 查询本组的销售和主播数量
-      const groupUsersRes = await db.collection('users')
-        .where({ groupId })
-        .get();
+      // 查询本团队的成员和负责人数量
+      const groupUsersRes = { data: allUsersRes.data.filter(user => user.groupId === groupId) };
       const anchors = groupUsersRes.data.filter(u => u.role === 1);
       const sales = groupUsersRes.data.filter(u => u.role === 2);
 
@@ -98,6 +108,7 @@ exports.main = async (event, context) => {
           .map(lead => ({
             _id: lead._id,
             phone: lead.phone,
+            customerName: lead.customerName || '',
             lastStatus: lead.lastStatus || lead.status || 'NEW',
             followUpCount: lead.followUpCount || 0,
             lastFollowUpDate: lead.lastFollowUpAt ? new Date(lead.lastFollowUpAt).toISOString().slice(0, 10) : '',

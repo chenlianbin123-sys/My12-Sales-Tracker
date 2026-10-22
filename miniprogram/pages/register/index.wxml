@@ -17,16 +17,16 @@
 
     <view class="form-item">
       <text class="label">角色 *</text>
-      <view class="radio-group">
+      <radio-group class="radio-group" bindchange="onRoleChange">
         <label class="radio-row">
           <radio value="2" checked="{{role === 2}}" color="#1677ff" />
-          <text>销售</text>
+          <text>成员</text>
         </label>
         <label class="radio-row">
           <radio value="1" checked="{{role === 1}}" color="#1677ff" />
-          <text>主播</text>
+          <text>负责人</text>
         </label>
-      </view>
+      </radio-group>
     </view>
 
     <button class="btn-primary" bindtap="onSubmit" disabled="{{submitting}}">

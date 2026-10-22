@@ -15,7 +15,7 @@
     "pages/user-detail/index"
   ],
   "window": {
-    "navigationBarTitleText": "线索跟进",
+    "navigationBarTitleText": "通用客户与事项跟进",
     "navigationBarBackgroundColor": "#ffffff",
     "navigationBarTextStyle": "black",
     "backgroundColor": "#f6f7fb",

@@ -9,8 +9,8 @@ const db = cloud.database();
 
 /**
  * 获取线索列表
- * - 主播：返回本组所有线索
- * - 销售：返回分配给自己（assignedSalesIds包含自己）的线索
+ * - 负责人：返回本团队所有线索
+ * - 成员：返回分配给自己（assignedSalesIds包含自己）的线索
  * - 管理员：返回所有线索
  */
 exports.main = async (event = {}, context) => {
@@ -26,8 +26,8 @@ exports.main = async (event = {}, context) => {
     const user = userRes.data[0];
     const { _id: userId, role, groupId } = user;
 
-    if ((role === 1 || role === 2) && ![1, 2, 3, 4].includes(groupId)) {
-      return { success: false, message: '请先联系管理员分配小组' };
+    if ((role === 1 || role === 2) && !(Number.isSafeInteger(groupId) && groupId > 0)) {
+      return { success: false, message: '请先联系管理员分配团队' };
     }
 
     const page = event.page === undefined ? 1 : event.page;
@@ -42,10 +42,10 @@ exports.main = async (event = {}, context) => {
     let query = {};
     
     if (role === 1) {
-      // 主播：本组所有线索
+      // 负责人：本团队所有线索
       query.groupId = groupId;
     } else if (role === 2) {
-      // 销售：分配给自己（assignedSalesIds包含自己）的线索
+      // 成员：分配给自己（assignedSalesIds包含自己）的线索
       query.assignedSalesIds = userId;
       query.groupId = groupId;
     } else if (role === 0) {
@@ -88,7 +88,7 @@ exports.main = async (event = {}, context) => {
     // 6. 查询总数
     const countRes = await db.collection('leads').where(query).count();
 
-    // 7. 查询所有相关用户（销售和主播）的姓名
+    // 7. 查询所有相关用户（成员和负责人）的姓名
     const leadIds = leadsRes.data.map(l => l._id);
     const salesIds = new Set();
     const anchorIds = new Set();
@@ -132,6 +132,7 @@ exports.main = async (event = {}, context) => {
       _id: lead._id,
       groupId: lead.groupId,
       phone: lead.phone,
+      customerName: lead.customerName || '',
       status: lead.status,
       lastStatus: lead.lastStatus || lead.status || 'NEW',
       remarks: lead.remarks,
