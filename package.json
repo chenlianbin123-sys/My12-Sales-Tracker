@@ -1,0 +1,8 @@
+{
+  "name": "my12-sales-tracker-checks",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Local regression checks; cloud functions are deployed separately",
+  "scripts": {"test": "node --test tests/*.test.js"},
+  "engines": {"node": ">=20"}
+}

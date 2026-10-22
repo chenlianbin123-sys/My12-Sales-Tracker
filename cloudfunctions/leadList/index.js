@@ -12,7 +12,7 @@ const db = cloud.database();
  * - 销售：返回分配给自己（assignedSalesIds包含自己）的线索
  * - 管理员：返回所有线索
  */
-exports.main = async (event, context) => {
+exports.main = async (event = {}, context) => {
   const wxContext = cloud.getWXContext();
   const openid = wxContext.OPENID;
 
@@ -25,6 +25,18 @@ exports.main = async (event, context) => {
     const user = userRes.data[0];
     const { _id: userId, role, groupId } = user;
 
+    if ((role === 1 || role === 2) && ![1, 2, 3, 4].includes(groupId)) {
+      return { success: false, message: '请先联系管理员分配小组' };
+    }
+
+    const page = event.page === undefined ? 1 : event.page;
+    const pageSize = event.pageSize === undefined ? 20 : event.pageSize;
+    if (!Number.isSafeInteger(page) || page < 1 ||
+        !Number.isSafeInteger(pageSize) || pageSize < 1 || pageSize > 100 ||
+        !Number.isSafeInteger((page - 1) * pageSize)) {
+      return { success: false, message: '分页参数无效：page 为正整数，pageSize 为 1~100 的整数' };
+    }
+
     // 2. 构建查询条件
     let query = {};
     
@@ -34,6 +46,7 @@ exports.main = async (event, context) => {
     } else if (role === 2) {
       // 销售：分配给自己（assignedSalesIds包含自己）的线索
       query.assignedSalesIds = userId;
+      query.groupId = groupId;
     } else if (role === 0) {
       // 管理员：所有线索（可选：按组筛选）
       if (event.groupId) {
@@ -49,8 +62,6 @@ exports.main = async (event, context) => {
     }
 
     // 4. 分页参数
-    const page = event.page || 1;
-    const pageSize = event.pageSize || 20;
     const skip = (page - 1) * pageSize;
 
     // 5. 查询线索列表

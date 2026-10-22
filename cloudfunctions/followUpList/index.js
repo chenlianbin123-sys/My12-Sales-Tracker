@@ -22,6 +22,10 @@ exports.main = async (event, context) => {
     const user = userRes.data[0];
     const { _id: userId, role, groupId } = user;
 
+    if ((role === 1 || role === 2) && ![1, 2, 3, 4].includes(groupId)) {
+      return { success: false, message: '请先联系管理员分配小组' };
+    }
+
     // 2. 参数校验
     const { leadId } = event;
     if (!leadId) {
@@ -44,7 +48,7 @@ exports.main = async (event, context) => {
     } else if (role === 2) {
       // 销售：只能查看分配给自己（assignedSalesIds包含自己）的线索
       const assignedSalesIds = lead.assignedSalesIds || [];
-      if (!assignedSalesIds.includes(userId)) {
+      if (lead.groupId !== groupId || !Array.isArray(assignedSalesIds) || !assignedSalesIds.includes(userId)) {
         return { success: false, message: '无权限查看该线索' };
       }
     } else if (role === 0) {
