@@ -7,3 +7,56 @@
 .lead-remark { margin-top: 12rpx; white-space: pre-wrap; word-break: break-all; }
 .error-box { color: #a62929; }
 .end-note { text-align: center; padding: 24rpx; }
+
+/* Shared by the anchor and sales lists; keep long names readable on narrow screens. */
+.lead-card-header {
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 12rpx 16rpx;
+  margin-bottom: 16rpx;
+}
+
+.lead-card-name {
+  flex: 1 1 280rpx;
+  min-width: 0;
+  font-size: 32rpx;
+  font-weight: 700;
+  line-height: 1.5;
+  word-break: break-all;
+}
+
+.lead-card-header .tag-group {
+  max-width: 100%;
+  margin-left: auto;
+}
+
+.lead-card-header .tag-status {
+  max-width: 100%;
+  box-sizing: border-box;
+  word-break: break-all;
+}
+
+.lead-card .small {
+  margin-top: 8rpx;
+  line-height: 1.6;
+  word-break: break-all;
+}
+
+.lead-card .lead-remark {
+  padding: 16rpx;
+  border-radius: 12rpx;
+  background: #f9fafb;
+  color: #4b5563;
+  font-size: 26rpx;
+  line-height: 1.6;
+}
+
+.lead-card .actions {
+  padding-top: 16rpx;
+  border-top: 1rpx solid #e5e7eb;
+}
+
+.lead-card .lead-delete {
+  color: #b91c1c;
+  background: #fff1f0;
+}
