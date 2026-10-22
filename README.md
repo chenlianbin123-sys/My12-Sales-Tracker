@@ -7,7 +7,7 @@
 
 **项目制作人：** [my12yyds](https://github.com/my12yyds)、[Lyon-heng](https://github.com/Lyon-heng)。[制作人名单](AUTHORS.md)
 
-当前 main：**0.2.0-dev，未发布的通用化开发版**。[Releases](https://github.com/my12yyds/My12-Sales-Tracker/releases) 中的 v0.1.0 仍为原有场景的源码预览包。
+当前源码版本：**v0.2.0 通用版（预发布）**。[完整版本下载](https://github.com/my12yyds/My12-Sales-Tracker/releases/tag/v0.2.0) · [更新日志](CHANGELOG.md)。v0.1.0 保留为原有场景的历史源码包。
 
 ## 主要功能
 
