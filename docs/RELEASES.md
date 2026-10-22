@@ -1,6 +1,8 @@
 # 版本下载与安装
 
-## v0.1.0 完整源码预览版
+## v0.2.0 通用版完整源码预发布
+
+推荐下载 v0.2.0：已取消固定四组与特定行业角色限制，支持单人负责人、动态团队、客户/事项名称及可选电话。旧数据库字段保留兼容，见 GENERAL_PURPOSE.md。v0.1.0 下载保留用于历史对照。
 
 在 [GitHub Releases](https://github.com/my12yyds/My12-Sales-Tracker/releases) 下载版本 ZIP 及 SHA256SUMS.txt。压缩包来自发布标签对应的 Git 提交，包含源码、云函数、测试、说明和工作流；不包含 .git、node_modules、真实环境配置或客户数据。
 
