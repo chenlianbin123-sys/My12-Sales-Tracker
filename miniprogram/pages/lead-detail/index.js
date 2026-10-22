@@ -41,7 +41,7 @@ Page({
       // 加载线索详情（通过leadList获取）
       const leadRes = await wx.cloud.callFunction({
         name: 'leadList',
-        data: {}
+        data: { leadId: this.data.leadId, pageSize: 1 }
       });
 
       if (leadRes.result.success) {
@@ -111,6 +111,8 @@ Page({
     } catch (error) {
       console.error('加载数据失败:', error);
       wx.showToast({ title: '加载失败', icon: 'none' });
+      this.setData({ loading: false });
+    } finally {
       this.setData({ loading: false });
     }
   },

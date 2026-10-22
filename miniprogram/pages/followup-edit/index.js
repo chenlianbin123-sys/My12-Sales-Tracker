@@ -38,7 +38,7 @@ Page({
     try {
       const res = await wx.cloud.callFunction({
         name: 'leadList',
-        data: {}
+        data: { leadId: this.data.leadId, pageSize: 1 }
       });
 
       if (res.result.success) {

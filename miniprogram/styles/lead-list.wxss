@@ -1,0 +1,9 @@
+.filter-row { display: flex; flex-wrap: wrap; gap: 12rpx; margin-top: 16rpx; align-items: center; }
+.filter-row picker { flex: 1; min-width: 240rpx; }
+.filter-row button { margin: 0; }
+.filter-label { display: block; font-size: 26rpx; margin-bottom: 12rpx; }
+.search-input { padding: 18rpx; background: #f3f5f8; border-radius: 12rpx; }
+.filters .row-between { margin-top: 16rpx; font-size: 26rpx; }
+.lead-remark { margin-top: 12rpx; white-space: pre-wrap; word-break: break-all; }
+.error-box { color: #a62929; }
+.end-note { text-align: center; padding: 24rpx; }

@@ -3,12 +3,14 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
+const { createRequire } = require('node:module');
 
 // Isolated cloud-function harness: no SDK installation, credentials or cloud writes.
 function load(name, user, lead = {}) {
   const calls = [];
   const db = {
-    command: { in: values => ({ in: values }) },
+    command: Object.fromEntries(['in', 'and', 'or', 'exists', 'gte', 'lt'].map(key => [key, values => ({ [key]: values })])),
+    RegExp: value => ({ regex: value }),
     collection(collection) {
       const query = {
         where(value) { calls.push({ collection, where: value }); return this; },
@@ -28,8 +30,10 @@ function load(name, user, lead = {}) {
     }
   };
   const cloud = { init() {}, database: () => db, getWXContext: () => ({ OPENID: 'test-openid' }) };
+  const localRequire = createRequire(path.join(__dirname, '..', 'cloudfunctions', name, 'index.js'));
   const sandbox = { exports: {}, require: id => {
-    assert.equal(id, 'wx-server-sdk'); return cloud;
+    if (id === 'wx-server-sdk') return cloud;
+    return localRequire(id);
   }, console };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '..', 'cloudfunctions', name, 'index.js'), 'utf8'), sandbox);
   return { main: sandbox.exports.main, calls };
@@ -96,4 +100,22 @@ test('new leads have NEW filter status and malformed phone is rejected', async (
   const result = await main({ phone: ' example ', assignedSalesIds: ['sales'] });
   assert.equal(result.success, true);
   assert.equal(calls.find(call => call.add).add.data.lastStatus, 'NEW');
+});
+
+test('combined search, status and detail filters retain sales group restrictions', async () => {
+  const { main, calls } = load('leadList', { _id: 'sales', role: 2, groupId: 2 });
+  const result = await main({ keyword: 'test.*', status: 'NEW', leadId: 'lead', unfollowed: true, createdFrom: '2026-10-01' });
+  assert.equal(result.success, true);
+  const where = calls.find(call => call.collection === 'leads').where;
+  assert.equal(where.and[0].and[0].groupId, 2);
+  assert.equal(where.and[0].and[0].assignedSalesIds, 'sales');
+  assert.equal(where.and[1]._id, 'lead');
+});
+
+test('invalid filter input returns a readable failure before database query', async () => {
+  for (const params of [{ status: 'INVALID' }, { sort: 'phone' }, { createdFrom: '2026-02-30' }]) {
+    const { main, calls } = load('leadList', { _id: 'sales', role: 2, groupId: 2 });
+    assert.equal((await main(params)).success, false);
+    assert.equal(calls.some(call => call.collection === 'leads'), false);
+  }
 });

@@ -1,4 +1,5 @@
 const cloud = require('wx-server-sdk');
+const { buildFilters } = require('./filters');
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -58,8 +59,19 @@ exports.main = async (event = {}, context) => {
 
     // 3. 可选的状态筛选
     if (event.status) {
-      query.lastStatus = event.status;
+      if (!['NEW', 'CONTACTED', 'QUOTED', 'WON', 'LOST'].includes(event.status)) {
+        return { success: false, message: '状态筛选无效' };
+      }
+      // Historic leads may have status but no lastStatus.
+      query = db.command.and([query, db.command.or([
+        { lastStatus: event.status },
+        { lastStatus: db.command.exists(false), status: event.status }
+      ])]);
     }
+    let filters;
+    try { filters = buildFilters(db, query, event); }
+    catch (error) { return { success: false, message: error.message }; }
+    query = filters.query;
 
     // 4. 分页参数
     const skip = (page - 1) * pageSize;
@@ -67,7 +79,8 @@ exports.main = async (event = {}, context) => {
     // 5. 查询线索列表
     const leadsRes = await db.collection('leads')
       .where(query)
-      .orderBy('createdAt', 'desc')
+      .orderBy(filters.order[0], filters.order[1])
+      .orderBy('_id', 'asc')
       .skip(skip)
       .limit(pageSize)
       .get();
@@ -120,7 +133,7 @@ exports.main = async (event = {}, context) => {
       groupId: lead.groupId,
       phone: lead.phone,
       status: lead.status,
-      lastStatus: lead.lastStatus,
+      lastStatus: lead.lastStatus || lead.status || 'NEW',
       remarks: lead.remarks,
       createdAt: lead.createdAt,
       lastFollowUpAt: lead.lastFollowUpAt,

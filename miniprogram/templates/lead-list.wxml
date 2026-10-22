@@ -1,0 +1,52 @@
+<view class="container">
+  <view class="card">
+    <view class="row-between">
+      <text class="title">{{isAnchor ? '本组线索' : '我的线索'}}</text>
+      <button size="mini" bindtap="goProfile">个人中心</button>
+    </view>
+    <view class="muted small">当前账号：{{userName || '加载中'}} · {{isAnchor ? '主播' : '销售'}}</view>
+    <button wx:if="{{isAnchor}}" class="btn-success" size="mini" bindtap="onAddLead">录入线索</button>
+  </view>
+  <view class="card filters">
+    <label class="filter-label">搜索客户电话或备注</label>
+    <input class="search-input" value="{{keyword}}" maxlength="80" placeholder="输入关键词，点击搜索" bindinput="onKeywordInput" bindconfirm="onSearch" confirm-type="search" />
+    <view class="filter-row">
+      <picker mode="selector" range="{{statusOptions}}" range-key="label" value="{{statusIndex}}" bindchange="onStatusChange"><view class="picker">状态：{{statusOptions[statusIndex].label}}</view></picker>
+      <picker mode="selector" range="{{sortOptions}}" range-key="label" value="{{sortIndex}}" bindchange="onSortChange"><view class="picker">排序：{{sortOptions[sortIndex].label}}</view></picker>
+    </view>
+    <view class="filter-row">
+      <picker mode="date" value="{{createdFrom}}" bindchange="onFromChange"><view class="picker">{{createdFrom || '创建开始日期'}}</view></picker>
+      <picker mode="date" value="{{createdTo}}" bindchange="onToChange"><view class="picker">{{createdTo || '创建结束日期'}}</view></picker>
+    </view>
+    <view class="row-between"><text>仅看未跟进</text><switch checked="{{unfollowed}}" bindchange="onUnfollowedChange" /></view>
+    <view class="row-between"><text>记住筛选偏好（不保存关键词）</text><switch checked="{{rememberFilters}}" bindchange="onRememberChange" /></view>
+    <view class="filter-row">
+      <button class="btn-primary" size="mini" bindtap="onSearch">搜索</button>
+      <button size="mini" bindtap="onReset">重置筛选</button>
+      <button size="mini" bindtap="onRefresh" loading="{{loading}}">刷新</button>
+    </view>
+  </view>
+  <view class="card row-between">
+    <text>已加载 {{leads.length}} / {{total}} 条</text>
+    <button size="mini" bindtap="onExport" disabled="{{!leads.length || loading || error}}">导出已加载 CSV</button>
+  </view>
+  <view wx:if="{{error}}" class="card error-box"><text>{{error}}</text><button size="mini" bindtap="onRefresh">重试</button></view>
+  <view class="card" wx:for="{{leads}}" wx:key="_id">
+    <view bindtap="onLeadTap" data-id="{{item._id}}">
+      <view class="row-between"><text class="phone">{{item.phone}}</text><text class="tag-status">{{item.lastStatusText}}</text></view>
+      <view class="muted small">销售：{{item.assignedSalesNames || '未分配'}} · 跟进 {{item.followUpCount || 0}} 次</view>
+      <view class="muted small">创建 {{item.createdAtDate || '—'}} · 最近跟进 {{item.lastFollowUpAt || '未跟进'}}</view>
+      <view class="lead-remark" wx:if="{{item.remarks}}">{{item.remarks}}</view>
+    </view>
+    <view class="filter-row actions">
+      <button size="mini" bindtap="onCall" data-phone="{{item.phone}}">拨号</button>
+      <button size="mini" bindtap="onCopy" data-phone="{{item.phone}}">复制电话</button>
+      <button class="btn-success" size="mini" bindtap="onFollowUpTap" data-id="{{item._id}}">跟进</button>
+      <button wx:if="{{isAnchor}}" size="mini" bindtap="onDeleteLead" data-id="{{item._id}}">删除</button>
+    </view>
+  </view>
+  <view class="empty" wx:if="{{!leads.length && !loading && !error}}">没有符合筛选条件的线索</view>
+  <view class="loading" wx:if="{{loading}}">正在加载…</view>
+  <button wx:if="{{hasMore}}" bindtap="onLoadMore" loading="{{loading}}" disabled="{{loading}}">加载更多</button>
+  <view class="muted small end-note" wx:if="{{leads.length && !hasMore && !loading}}">已加载全部匹配结果</view>
+</view>
