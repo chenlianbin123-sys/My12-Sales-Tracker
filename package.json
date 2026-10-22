@@ -5,6 +5,7 @@
   "description": "Local regression checks; cloud functions are deployed separately",
   "scripts": {
     "test": "node --test tests/*.test.js",
+    "check:syntax": "node scripts/check-syntax.js",
     "check:public": "node scripts/check-public-config.js"
   },
   "engines": {"node": ">=20"}

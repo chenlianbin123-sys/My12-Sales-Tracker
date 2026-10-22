@@ -1,0 +1,19 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+    labels: [dependencies]
+  - package-ecosystem: npm
+    directories:
+      - /cloudfunctions/*
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+    labels: [dependencies]
+    groups:
+      cloud-sdk-compatible:
+        patterns: ['wx-server-sdk']
+        update-types: [minor, patch]

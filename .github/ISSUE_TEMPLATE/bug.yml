@@ -1,0 +1,36 @@
+name: 缺陷反馈
+description: 提交可复现的问题，不要包含真实客户数据。
+title: "[Bug] "
+labels: [bug]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: 提交版本与运行环境
+      description: 提交 SHA、开发者工具版本、基础库及操作系统。
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 最小复现步骤
+      description: 请使用虚构资料，说明角色和小组条件。
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期与实际结果
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: 已脱敏日志或截图（可选）
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: 公开资料检查
+      options:
+        - label: 我已移除真实电话、openid、客户备注、密钥及私有配置。
+          required: true

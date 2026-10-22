@@ -1,0 +1,21 @@
+name: 功能建议
+description: 描述具体用户场景和可验证的验收目标。
+title: "[Feature] "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: 哪个角色遇到了什么问题？
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 建议行为和验收标准
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: 权限、数据或部署影响

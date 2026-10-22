@@ -1,0 +1,23 @@
+name: Source package
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm test
+      - run: npm run check:syntax
+      - run: npm run check:public
+      - run: git archive --format=zip --prefix=My12-Sales-Tracker/ --output=source.zip HEAD
+      - uses: actions/upload-artifact@v4
+        with:
+          name: source-${{ github.sha }}
+          path: source.zip
+          retention-days: 14

@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 安全漏洞私密报告
+    url: https://github.com/my12yyds/My12-Sales-Tracker/security/advisories/new
+    about: 越权、泄露等问题不要公开真实资料；请先阅读 SECURITY.md。
+  - name: 使用与部署说明
+    url: https://github.com/my12yyds/My12-Sales-Tracker/blob/main/SUPPORT.md
+    about: 查阅安装、配置与功能说明。

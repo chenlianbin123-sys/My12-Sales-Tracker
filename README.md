@@ -1,5 +1,12 @@
 ## 微信小程序：主播-销售分组式线索跟进系统（云开发）
 
+[![Regression checks](https://github.com/my12yyds/My12-Sales-Tracker/actions/workflows/checks.yml/badge.svg)](https://github.com/my12yyds/My12-Sales-Tracker/actions/workflows/checks.yml)
+[![CodeQL](https://github.com/my12yyds/My12-Sales-Tracker/actions/workflows/codeql.yml/badge.svg)](https://github.com/my12yyds/My12-Sales-Tracker/actions/workflows/codeql.yml)
+
+**项目制作人：** [my12yyds](https://github.com/my12yyds)、[Lyon-heng](https://github.com/Lyon-heng)。详见[制作人名单](AUTHORS.md)。
+
+[参与贡献](CONTRIBUTING.md) · [问题反馈](https://github.com/my12yyds/My12-Sales-Tracker/issues/new/choose) · [安全报告](SECURITY.md) · [获取帮助](SUPPORT.md) · [GitHub 维护功能](docs/GITHUB_MAINTENANCE.md)
+
 基于微信小程序云开发的线索录入、分组分配与销售协作跟进项目。适合学习与二次开发；上线前需在独立云环境验证权限、索引和业务流程。
 
 ### 本地检查与维护

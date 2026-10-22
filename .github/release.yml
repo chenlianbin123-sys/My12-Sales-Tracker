@@ -1,0 +1,12 @@
+changelog:
+  exclude:
+    labels: [skip-changelog]
+  categories:
+    - title: 功能改进
+      labels: [enhancement]
+    - title: 问题修复
+      labels: [bug]
+    - title: 依赖维护
+      labels: [dependencies]
+    - title: 其他更新
+      labels: ['*']
